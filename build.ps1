@@ -104,6 +104,8 @@ $DistDir = Join-Path $RootDir "dist"
 
 if ($Clean) {
     Write-Step "Limpando artefatos anteriores (-Clean)..."
+    Get-Process zx81ide -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Milliseconds 200
     if (Test-Path $BuildDir) { Remove-Item $BuildDir -Recurse -Force | Out-Null }
     if (Test-Path $DistDir) { Remove-Item $DistDir -Recurse -Force | Out-Null }
     $ExistingZip = Join-Path $RootDir $ZipName

@@ -4,6 +4,31 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.3] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.3 [3D Monster Maze] - Correcao no parse UTF-8 das bordas no TUI`
+
+* **Versão:** `0.1.3`
+* **Tag Git:** `v0.1.3`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Correcao no parse UTF-8 das bordas no TUI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.3.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.3** corrige a exibição das bordas dos menus suspensos (cascata) e caixas de diálogo na interface TUI. Foi solucionada a fragmentação indevida de bytes UTF-8 no buffer virtual de tela, garantindo que fontes modernas como **Nerd Fonts (JetBrains Mono)** e emuladores de terminal exibam linhas e cantos contínuos sem caracteres de substituição (losango com ponto de interrogação).
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Decodificador UTF-8 no ScreenBuffer:** A rotina `put_string` agora agrupa e valida os bytes de cada caractere multi-byte (1 a 4 bytes), alocando exatamente uma célula lógica por coluna na grade do terminal.
+* **Bordas Contínuas e Impecáveis:** Desenho consistente de cantos e retas (`┌`, `─`, `┐`, `│`, `└`, `┘`, `╔`, `═`, `╗`, `╚`, `╝`, `║`).
+* **Sincronização de Codificação:** Inclusão de `SetConsoleCP(CP_UTF8)` para suporte integral a UTF-8 no Windows.
+* **Pacote de Distribuição:** Novo binário empacotado em `zx81ide-v-0.1.3.zip`.
+
+---
+
 ## [v0.1.2] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.2 [3D Monster Maze] - Fundo uniforme com quadriculado no desktop TUI`
 

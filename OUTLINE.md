@@ -82,6 +82,7 @@
   5. Atualização de `CHANGELOG.md`, `RELEASE.md`, `MANUAL.md` e `OUTLINE.md`.
   6. Compilação e empacotamento completo via `build.ps1`.
   7. Refinamento visual da TUI: padronização da cor de fundo do desktop para ser homogênea e uniforme em toda a extensão, eliminando o padrão xadrez claro/escuro e mantendo o caractere quadriculado `░` em cinza escuro sobre fundo preto uniforme. Versão incrementada para `v0.1.2` (`Fundo uniforme com quadriculado no desktop TUI`).
+  8. Correção das bordas UTF-8 no TUI: resolvido o bug em `ScreenBuffer::put_string` que iterava byte a byte ao invés de codepoint UTF-8, dividindo caracteres de moldura (`┌`, `─`, etc.) em fragmentos inválidos que causavam losangos com interrogação em Nerd Fonts (JetBrains Mono). Implementado decodificador UTF-8 nativo, `repeat_utf8` e `SetConsoleCP(CP_UTF8)`. Versão incrementada para `v0.1.3` (`Correcao no parse UTF-8 das bordas no TUI`).
 
 ---
 

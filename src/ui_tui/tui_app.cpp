@@ -49,9 +49,19 @@ void setup_console() {
         }
     }
     SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 #endif
     std::cout << Colors::HIDE_CURSOR;
     std::cout << "\x1b[2J" << Colors::HOME;
+}
+
+std::string repeat_utf8(const std::string& ch, int count) {
+    std::string result;
+    result.reserve(ch.size() * count);
+    for (int i = 0; i < count; ++i) {
+        result += ch;
+    }
+    return result;
 }
 
 void restore_console() {
@@ -104,11 +114,30 @@ public:
 
     void put_string(int x, int y, const std::string& text, const std::string& fg, const std::string& bg) {
         int cx = x;
-        for (size_t i = 0; i < text.size(); ++i) {
-            if (cx >= width) break;
-            std::string ch(1, text[i]);
+        size_t i = 0;
+        while (i < text.size() && cx < width) {
+            unsigned char c = static_cast<unsigned char>(text[i]);
+            size_t char_len = 1;
+            if ((c & 0x80) == 0) {
+                char_len = 1;
+            } else if ((c & 0xE0) == 0xC0) {
+                char_len = 2;
+            } else if ((c & 0xF0) == 0xE0) {
+                char_len = 3;
+            } else if ((c & 0xF8) == 0xF0) {
+                char_len = 4;
+            } else {
+                char_len = 1;
+            }
+
+            if (i + char_len > text.size()) {
+                char_len = text.size() - i;
+            }
+
+            std::string ch = text.substr(i, char_len);
             put_cell(cx, y, ch, fg, bg);
             cx++;
+            i += char_len;
         }
     }
 
@@ -228,10 +257,10 @@ int run_tui() {
                 int drop_y = 1;
                 int drop_w = 20;
 
-                // Caixa com borda simples
-                screen.put_string(drop_x, drop_y,     "┌──────────────────┐", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 1, "│                  │", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 2, "└──────────────────┘", Colors::FG_WHITE, Colors::BG_BLACK);
+                // Caixa com borda simples UTF-8
+                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", drop_w - 2) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 1, "│" + std::string(drop_w - 2, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", drop_w - 2) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
 
                 // Item Sair selecionado
                 screen.put_string(drop_x + 2, drop_y + 1, " Sair       Alt+X ", Colors::FG_BLACK, Colors::BG_WHITE);
@@ -248,9 +277,9 @@ int run_tui() {
                 int drop_y = 1;
                 int drop_w = 20;
 
-                screen.put_string(drop_x, drop_y,     "┌──────────────────┐", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 1, "│                  │", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 2, "└──────────────────┘", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", drop_w - 2) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 1, "│" + std::string(drop_w - 2, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", drop_w - 2) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
 
                 screen.put_string(drop_x + 2, drop_y + 1, " About...      F1 ", Colors::FG_BLACK, Colors::BG_WHITE);
 
@@ -280,12 +309,12 @@ int run_tui() {
             }
 
             // Moldura dupla estilo Turbo Vision / MS-DOS
-            screen.put_string(dlg_x, dlg_y, "╔" + std::string(dlg_w - 2, '=') + "╗", Colors::FG_WHITE, Colors::BG_BLACK);
+            screen.put_string(dlg_x, dlg_y, "╔" + repeat_utf8("═", dlg_w - 2) + "╗", Colors::FG_WHITE, Colors::BG_BLACK);
             for (int dy = 1; dy < dlg_h - 1; ++dy) {
                 screen.put_cell(dlg_x, dlg_y + dy, "║", Colors::FG_WHITE, Colors::BG_BLACK);
                 screen.put_cell(dlg_x + dlg_w - 1, dlg_y + dy, "║", Colors::FG_WHITE, Colors::BG_BLACK);
             }
-            screen.put_string(dlg_x, dlg_y + dlg_h - 1, "╚" + std::string(dlg_w - 2, '=') + "╝", Colors::FG_WHITE, Colors::BG_BLACK);
+            screen.put_string(dlg_x, dlg_y + dlg_h - 1, "╚" + repeat_utf8("═", dlg_w - 2) + "╝", Colors::FG_WHITE, Colors::BG_BLACK);
 
             // Título
             std::string title = "[ Sobre o zx81ide ]";

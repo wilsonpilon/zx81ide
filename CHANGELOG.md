@@ -9,6 +9,18 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.3] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Correcao no parse UTF-8 das bordas no TUI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* Corrigido o fatiamento indevido de bytes em caracteres multi-byte UTF-8 na função `put_string`, que dividia símbolos gráficos de moldura (`┌`, `─`, `┐`, `│`, `└`, `┘`, `╔`, `═`, `╗`, `╚`, `╝`, `║`) gerando caracteres inválidos de substituição (losango com ponto de interrogação) em fontes Nerd Fonts (JetBrains Mono) e terminais modernos.
+* Introduzida a rotina `repeat_utf8` para garantir que o preenchimento de bordas mantenha contagem estrita de colunas visuais no console.
+* Adicionado `SetConsoleCP(CP_UTF8)` no bootstrap do console Windows para sincronização plena de codificação de entrada e saída.
+
+---
+
 ## [0.1.2] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Fundo uniforme com quadriculado no desktop TUI"
