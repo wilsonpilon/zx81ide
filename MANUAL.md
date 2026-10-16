@@ -104,43 +104,50 @@ Construído com **Dear ImGui**:
 
 ---
 
-## 5. Interface de Linha de Comando (CLI)
+## 5. Interface de Linha de Comando (CLI) e Modo Interativo
 
-Na versão inicial (`v0.1.0`), a CLI executa o bootstrap do sistema e exibe as informações fundamentais de versão e linhagem de hardware:
+O **zx81ide** possui como módulo central a sua interface de linha de comando, permitindo tanto automação via argumentos quanto uma sessão interativa de console.
 
-```text
-================================================================
-  _____  _     ___  _   _     _ _       
- |_  / \/ /___( _ )/ | (_) __| (_) ___  
-  / / \  // _ \/ _ \| | | |/ _` | |/ _ \ 
- /___//_/\___/\___/|_| |_|\__,_|_|\___/ 
-  Integrated Development Environment for Sinclair ZX-81 & Clones
-================================================================
-Program Name   : zx81ide
-Version        : 0.1.0
-Major Model (X): Sinclair ZX81 (Foundation)
-Game Codename(Y): 3D Monster Maze
-Build Subtitle(Z): Estrutura inicial do projeto, documentacao e CLI bootstrap
-----------------------------------------------------------------
-Hello, Sinclair ZX-81 World! [READY]
-================================================================
+### 5.1. Argumentos de Linha de Comando
+Ao executar o binário com parâmetros:
+```bash
+zx81ide [opcoes]
 ```
 
-### Próximas Opções de Linha de Comando (Planejadas):
-```text
-Uso: zx81ide [opcoes] [arquivo_fonte]
+* `-h`, `--help`: Exibe a síntese de opções e ajuda da aplicação.
+* `-v`, `--version`: Exibe a versão semântica, marcos de hardware e codenames.
+* `--cli`: Inicia no console interativo CLI (padrão se nenhum argumento for fornecido).
+* `--tui`: Inicia diretamente na interface gráfica de terminal (TUI retro MS-DOS).
+* `--gui`: Inicia no modo desktop gráfico (em desenvolvimento).
 
-Opcoes:
-  -h, --help            Exibe esta mensagem de ajuda
-  -v, --version         Exibe versao detalhada
-  --tui                 Inicia em modo Text User Interface
-  --gui                 Inicia em modo Graphical User Interface
-  -a, --assemble        Monta arquivo Assembly Z80 (.asm) para .p
-  -b, --basic           Compila codigo BASIC (.bas) para .p
-  -e, --emulate         Inicia emulador com o arquivo fornecido
-  -m, --model <nome>    Define o hardware alvo (zx81, tk85, cp200, ts1000)
-  -r, --ram <tamanho>   Define a quantidade de RAM (1K, 2K, 16K, 32K, 64K)
+### 5.2. Console Interativo CLI (`zx81ide>`)
+Ao executar `zx81ide.exe` sem parâmetros, o console interativo é iniciado exibindo o banner do sistema e o prompt de comando:
+
+```text
+zx81ide> help
+Comandos Disponiveis no Console CLI:
+  help, ?           Exibe esta lista de comandos
+  tui               Inicia a interface retro MS-DOS em modo texto (TUI)
+  version, ver      Exibe os detalhes completos de versao e codenames
+  clear, cls        Limpa a tela do console
+  exit, quit, q     Encerra o zx81ide
 ```
+
+### 5.3. Interface Retro de Terminal (TUI)
+O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares clássicos da era MS-DOS dos anos 1990 (Turbo Vision / Borland C++):
+* **Paleta Sinclair ZX-81:** Estritamente **Preto**, **Branco** e **Cinza**.
+* **Barra de Menus (Linha 1):** Fundo preto com texto branco.
+  * `Arquivo` -> `Sair (Alt+X)`
+  * `Help` -> `About... (F1)`
+* **Desktop:** Área central com padrão quadriculado ASCII em cinza e branco (`░░▒▒`).
+* **Barra de Status (Última Linha):** Fundo cinza com letras pretas, atalhos úteis e versão alinhada à direita (`| v0.1.1`).
+* **Atalhos do Teclado:**
+  * `Setas Esquerda / Direita`: Alterna entre os menus `Arquivo` e `Help`.
+  * `Seta Abaixo / Enter`: Abre o submenu suspenso ou ativa o item selecionado.
+  * `Esc`: Fecha submenus ou caixas de diálogo; sai do modo TUI quando no nível raiz.
+  * `F1`: Abre imediatamente o diálogo modal Sobre (About).
+  * `F10`: Alterna o foco da barra de menus.
+  * `Alt+X` ou `Q`: Encerra o TUI e retorna ao console.
 
 ---
 

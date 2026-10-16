@@ -64,6 +64,24 @@
   8. Execução do build local, teste da execução de `zx81ide.exe` e geração do pacote `zx81ide-v-0.1.0.zip`.
   9. Commit inicial, push para `origin main`, criação de tag `v0.1.0` e GitHub Release.
 
+### Sessão 02 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * O módulo principal deve ser a CLI: implementar passagem de argumentos (`--help`, `-h`, etc.).
+  * Sem argumentos, entrar diretamente no modo interativo CLI.
+  * O modo CLI possui o comando `help` e o comando `tui` para iniciar o modo TUI.
+  * O modo TUI deve remeter à era MS-DOS anos 1990 (Turbo Vision / Borland C++), respeitando o ZX-81 usando **apenas Branco, Preto e Cinza**.
+  * Barra de menu com fundo preto e texto branco: `Arquivo -> Sair` e `Help -> About`.
+  * Área de desktop com quadriculados ASCII em cinza e branco (`░░▒▒`).
+  * Linha de status no rodapé com fundo cinza e texto preto, terminando com a versão alinhada à direita (`| v0.1.1`).
+* **Ações Executadas:**
+  1. Criação de `include/cli/cli_parser.h` e `src/cli/cli_parser.cpp` com suporte a `--help`, `--version`, `--tui`, `--cli`.
+  2. Criação de `include/cli/cli_app.h` e `src/cli/cli_app.cpp` com console interativo `zx81ide>` e comandos `help`, `tui`, `version`, `clear`, `exit`.
+  3. Criação de `include/ui_tui/tui_app.h` e `src/ui_tui/tui_app.cpp` com motor TUI MS-DOS monocromático ZX-81, suporte a duplo buffer, menus suspensos, desktop quadriculado, barra de status e caixa de diálogo modal de About.
+  4. Atualização de `src/main.cpp`, `CMakeLists.txt` e `include/core/version.h` para a versão `v0.1.1` (`Sinclair ZX81 (Foundation)` / `3D Monster Maze` / `CLI interativo e modo TUI retro estilo MS-DOS`).
+  5. Atualização de `CHANGELOG.md`, `RELEASE.md`, `MANUAL.md` e `OUTLINE.md`.
+  6. Compilação e empacotamento completo via `build.ps1`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

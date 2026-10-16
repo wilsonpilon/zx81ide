@@ -9,6 +9,32 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.1] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "CLI interativo e modo TUI retro estilo MS-DOS"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* Módulo de parser de linha de comando CLI (`include/cli/cli_parser.h`, `src/cli/cli_parser.cpp`) com suporte a:
+  * `--help` / `-h`: Exibição detalhada de parâmetros e sintaxe.
+  * `--version` / `-v`: Informações completas de versão semântica, marcos de hardware e codenames.
+  * `--tui`: Inicialização direta no ambiente gráfico de terminal (TUI).
+  * `--cli`: Entrada explícita no console interativo (comportamento padrão ao iniciar sem parâmetros).
+* Console interativo CLI (`include/cli/cli_app.h`, `src/cli/cli_app.cpp`):
+  * Prompt de comando dedicado `zx81ide>`.
+  * Comandos internos integrados: `help` / `?`, `tui`, `version` / `ver`, `clear` / `cls`, `exit` / `quit` / `q`.
+* Ambiente TUI (Text User Interface) retro estilo MS-DOS anos 1990 (`include/ui_tui/tui_app.h`, `src/ui_tui/tui_app.cpp`):
+  * **Paleta estrita Sinclair ZX-81:** Respeito integral à estética monocromática/escala de cinza usando exclusivamente **Preto**, **Branco** e **Cinza**.
+  * **Barra de Menus (Topo):** Fundo preto e letras em branco com suporte a dropdowns:
+    * `Arquivo` -> `Sair` (retorna ao CLI / encerra).
+    * `Help` -> `About` (abre janela modal com metadados).
+  * **Área de Desktop:** Padrão quadriculado ASCII em cinza e branco (`░░▒▒`) com sombras retro nos elementos suspensos.
+  * **Barra de Status (Rodapé):** Fundo cinza e letras em preto com teclas de atalho e tag de versão alinhada à direita (`| v0.1.1`).
+  * **Janela Modal de Sobre (About):** Moldura dupla clássica (`╔═╗`, `║ ║`, `╚═╝`), sombra em relevo e botão `[ OK ]`.
+  * **Navegação Completa por Teclado:** Suporte a setas direcionais, Enter, Esc, F10, F1, atalhos rápidos (`Alt+X`, `A`, `H`).
+
+---
+
 ## [0.1.0] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Estrutura inicial do projeto, documentação e CLI bootstrap"

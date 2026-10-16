@@ -4,6 +4,62 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.1] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.1 [3D Monster Maze] - CLI interativo e modo TUI retro estilo MS-DOS`
+
+* **Versão:** `0.1.1`
+* **Tag Git:** `v0.1.1`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `CLI interativo e modo TUI retro estilo MS-DOS`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.1.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.1** implementa o módulo principal CLI com passagem de argumentos via linha de comando, o console interativo com comandos dedicados e a introdução da interface visual de terminal **TUI (Text User Interface)**, modelada diretamente na estética dos softwares da era MS-DOS dos anos 1990 (Turbo Vision / Borland C++), respeitando com rigor histórico a paleta do Sinclair ZX-81 composta unicamente por **Preto**, **Branco** e **Cinza**.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+
+#### 2.1. Parser de Linha de Comando e Modo CLI Principal
+* Suporte completo a argumentos de linha de comando:
+  * `zx81ide --help` ou `-h`: Exibe a ajuda detalhada e lista de opções.
+  * `zx81ide --version` ou `-v`: Exibe metadados completos de versão, hardware e codenames.
+  * `zx81ide --tui`: Inicia diretamente na interface retro de terminal TUI.
+  * `zx81ide --cli`: Inicia explicitamente no console interativo CLI.
+* Execução sem parâmetros: Ao chamar apenas `zx81ide.exe`, o programa ingressa diretamente no **Modo CLI Interativo**.
+
+#### 2.2. Console Interativo CLI (`zx81ide>`)
+* Prompt interativo em loop contínuo:
+  * `help` ou `?`: Lista todos os comandos disponíveis no console.
+  * `tui`: Transiciona dinamicamente para a interface retro TUI.
+  * `version` ou `ver`: Exibe a versão formatada do sistema.
+  * `clear` ou `cls`: Limpa a tela do console.
+  * `exit`, `quit` ou `q`: Encerra o programa com elegância.
+
+#### 2.3. Modo TUI Retro Anos 1990 (Estilo MS-DOS Monocromático)
+* **Paleta Estrita ZX-81:** Respeito integral à estética dos anos 1980/1990 em preto (`#000000`), branco (`#FFFFFF`) e cinza (`#808080`).
+* **Barra Superior de Menus:** Fundo preto com letras em branco, destacando a seleção em branco com letras pretas:
+  * `Arquivo` -> Submenu suspenso com opção `Sair (Alt+X)`.
+  * `Help` -> Submenu suspenso com opção `About... (F1)`.
+* **Área de Trabalho (Desktop):** Padrão quadriculado em arte ASCII e blocos (`░░▒▒`) em cinza e branco, com sombreamento dos menus e janelas.
+* **Barra de Status (Rodapé):** Fundo cinza com letras em preto, atalhos de navegação à esquerda e tag de versão alinhada à direita (`| v0.1.1`).
+* **Diálogo Modal About (F1):** Janela centralizada com bordas duplas (`╔═╗`, `║ ║`, `╚═╝`), sombra em relevo e botão interativo `[ OK ]`.
+* **Navegação Integral por Teclado:** Setas direcionais (esquerda, direita, acima, abaixo), Enter, Esc, F10, F1 e atalhos rápidos (`Alt+X`, `A`, `H`).
+
+---
+
+### 3. Artefatos Gerados
+
+| Arquivo | Descrição |
+| :--- | :--- |
+| `dist/zx81ide.exe` | Executável atualizado com CLI interativo e TUI retro integrada. |
+| `zx81ide-v-0.1.1.zip` | Pacote zip consolidado para distribuição do release. |
+
+---
+
 ## [v0.1.0] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.0 [3D Monster Maze] - Estrutura inicial do projeto, documentação e CLI bootstrap`
 

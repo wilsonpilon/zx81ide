@@ -1,30 +1,37 @@
+#include "cli/cli_parser.h"
+#include "cli/cli_app.h"
+#include "ui_tui/tui_app.h"
 #include <iostream>
-#include "core/version.h"
-
-void print_banner() {
-    std::cout << "================================================================" << std::endl;
-    std::cout << "  _____  _     ___  _   _     _ _       " << std::endl;
-    std::cout << " |_  / \\/ /___( _ )/ | (_) __| (_) ___  " << std::endl;
-    std::cout << "  / / \\  // _ \\/ _ \\| | | |/ _` | |/ _ \\ " << std::endl;
-    std::cout << " /___//_/\\_\\___/\\___/|_| |_|\\__,_|_|\\___/ " << std::endl;
-    std::cout << "  Integrated Development Environment for Sinclair ZX-81 & Clones" << std::endl;
-    std::cout << "================================================================" << std::endl;
-}
 
 int main(int argc, char* argv[]) {
-    (void)argc;
-    (void)argv;
+    using namespace zx81ide::cli;
 
-    print_banner();
+    CliOptions options = parse_arguments(argc, argv);
 
-    std::cout << "Program Name   : zx81ide" << std::endl;
-    std::cout << "Version        : " << zx81ide::get_version_string() << std::endl;
-    std::cout << "Major Model (X): " << zx81ide::VERSION_MAJOR_NAME << std::endl;
-    std::cout << "Game Codename(Y): " << zx81ide::VERSION_GAME_CODENAME << std::endl;
-    std::cout << "Build Subtitle(Z): " << zx81ide::VERSION_BUILD_SUBTITLE << std::endl;
-    std::cout << "----------------------------------------------------------------" << std::endl;
-    std::cout << "Hello, Sinclair ZX-81 World! [READY]" << std::endl;
-    std::cout << "================================================================" << std::endl;
+    if (options.has_error) {
+        std::cerr << "Erro: " << options.error_message << std::endl;
+        return 1;
+    }
 
-    return 0;
+    switch (options.mode) {
+        case AppMode::CLI_HELP:
+            print_help();
+            return 0;
+
+        case AppMode::CLI_VERSION:
+            print_version();
+            return 0;
+
+        case AppMode::TUI:
+            return zx81ide::ui_tui::run_tui();
+
+        case AppMode::GUI:
+            std::cout << "Modo GUI desktop (Dear ImGui) esta em fase de planejamento/desenvolvimento.\n";
+            std::cout << "Iniciando modo TUI retro alternativo...\n\n";
+            return zx81ide::ui_tui::run_tui();
+
+        case AppMode::CLI_INTERACTIVE:
+        default:
+            return run_interactive_cli();
+    }
 }

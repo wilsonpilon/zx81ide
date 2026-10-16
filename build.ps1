@@ -179,7 +179,7 @@ if ($HasCMake) {
     }
 } else {
     Write-Host "CMake nao disponivel. Compilando diretamente com g++..." -ForegroundColor Gray
-    $SourceFiles = (Join-Path $RootDir "src/main.cpp")
+    $SourceFiles = Get-ChildItem -Path (Join-Path $RootDir "src") -Filter "*.cpp" -Recurse | Select-Object -ExpandProperty FullName
     $IncludeDir = (Join-Path $RootDir "include")
     
     & g++ -std=c++17 -O2 -Wall -Wextra -I$IncludeDir $SourceFiles -o $TargetExe
@@ -192,7 +192,7 @@ Write-Success "Compilacao concluida com sucesso -> $TargetExe"
 # 5. Teste de Execução Rápido
 # ---------------------------------------------------------------------------
 Write-Step "Executando teste funcional preliminar do executavel gerado..."
-$TestOutput = & $TargetExe
+$TestOutput = & $TargetExe --version
 Write-Host $TestOutput -ForegroundColor DarkGray
 Write-Success "Executavel respondeu com sucesso."
 
