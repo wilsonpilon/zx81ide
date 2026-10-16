@@ -9,6 +9,17 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.4] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Alinhamento e ampliacao da borda dos menus TUI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* Ampliada a largura da caixa dos menus suspensos (dropdown) de 20 para 22 colunas e implementado o formatador `format_menu_item`, garantindo que os textos e atalhos fiquem estritamente contidos na área interna (`inner_w = 20`) sem sobrepor ou cortar a borda lateral direita (`│`).
+* Incluído respiro simétrico nas extremidades de cada item de menu, oferecendo acabamento visual limpo e legível.
+
+---
+
 ## [0.1.3] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Correcao no parse UTF-8 das bordas no TUI"

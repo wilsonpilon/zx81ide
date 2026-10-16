@@ -64,6 +64,17 @@ std::string repeat_utf8(const std::string& ch, int count) {
     return result;
 }
 
+std::string format_menu_item(const std::string& label, const std::string& shortcut, int inner_width) {
+    std::string text = " " + label;
+    int spaces = inner_width - static_cast<int>(text.size()) - static_cast<int>(shortcut.size()) - 1;
+    if (spaces < 1) spaces = 1;
+    text += std::string(spaces, ' ') + shortcut + " ";
+    if (static_cast<int>(text.size()) > inner_width) {
+        text = text.substr(0, inner_width);
+    }
+    return text;
+}
+
 void restore_console() {
     std::cout << Colors::RESET << Colors::SHOW_CURSOR;
     std::cout << "\x1b[2J" << Colors::HOME;
@@ -251,19 +262,22 @@ int run_tui() {
         // 4. SUBMENU DROPDOWN
         // -------------------------------------------------------------
         if (menu_open && !show_about) {
+            int drop_w = 22;
+            int inner_w = drop_w - 2; // 20 colunas internas
+
             if (current_menu == 0) {
                 // Dropdown Arquivo -> [ Sair ]
                 int drop_x = pos_arquivo;
                 int drop_y = 1;
-                int drop_w = 20;
 
                 // Caixa com borda simples UTF-8
-                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", drop_w - 2) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 1, "│" + std::string(drop_w - 2, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", drop_w - 2) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", inner_w) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 1, "│" + std::string(inner_w, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", inner_w) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
 
-                // Item Sair selecionado
-                screen.put_string(drop_x + 2, drop_y + 1, " Sair       Alt+X ", Colors::FG_BLACK, Colors::BG_WHITE);
+                // Item Sair selecionado (começa em drop_x + 1, perfeitamente contido entre as bordas)
+                std::string item_sair = format_menu_item("Sair", "Alt+X", inner_w);
+                screen.put_string(drop_x + 1, drop_y + 1, item_sair, Colors::FG_BLACK, Colors::BG_WHITE);
 
                 // Sombra MS-DOS (drop shadow)
                 screen.put_cell(drop_x + drop_w, drop_y + 1, "▒", Colors::FG_GRAY_DARK, Colors::BG_BLACK);
@@ -275,13 +289,13 @@ int run_tui() {
                 // Dropdown Help -> [ About ]
                 int drop_x = pos_help;
                 int drop_y = 1;
-                int drop_w = 20;
 
-                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", drop_w - 2) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 1, "│" + std::string(drop_w - 2, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
-                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", drop_w - 2) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", inner_w) + "┐", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 1, "│" + std::string(inner_w, ' ')  + "│", Colors::FG_WHITE, Colors::BG_BLACK);
+                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", inner_w) + "┘", Colors::FG_WHITE, Colors::BG_BLACK);
 
-                screen.put_string(drop_x + 2, drop_y + 1, " About...      F1 ", Colors::FG_BLACK, Colors::BG_WHITE);
+                std::string item_about = format_menu_item("About...", "F1", inner_w);
+                screen.put_string(drop_x + 1, drop_y + 1, item_about, Colors::FG_BLACK, Colors::BG_WHITE);
 
                 // Sombra MS-DOS
                 screen.put_cell(drop_x + drop_w, drop_y + 1, "▒", Colors::FG_GRAY_DARK, Colors::BG_BLACK);

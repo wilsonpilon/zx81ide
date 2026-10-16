@@ -6,7 +6,7 @@
 [![CMake](https://img.shields.io/badge/CMake-3.15%2B-brightgreen.svg)](https://cmake.org/)
 [![PowerShell](https://img.shields.io/badge/PowerShell-7%2B-blueviolet.svg)](https://github.com/PowerShell/PowerShell)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-yellow.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Version-v0.1.3--3D_Monster_Maze-orange.svg)](RELEASE.md)
+[![Release](https://img.shields.io/badge/Version-v0.1.4--3D_Monster_Maze-orange.svg)](RELEASE.md)
 
 ---
 
@@ -78,10 +78,10 @@ Adotamos um esquema de versionamento semântico personalizado com homenagens his
   * *Identificação:* Subtítulo curto e objetivo indicando o que foi alterado ou corrigido.
 
 ### Versão Atual
-* **Versão:** `v0.1.3`
+* **Versão:** `v0.1.4`
 * **X (Modelo):** `Sinclair ZX81 (Foundation)`
 * **Y (Jogo):** `3D Monster Maze`
-* **Z (Build):** `Correcao no parse UTF-8 das bordas no TUI`
+* **Z (Build):** `Alinhamento e ampliacao da borda dos menus TUI`
 
 ---
 

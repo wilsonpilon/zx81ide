@@ -4,6 +4,30 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.4] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.4 [3D Monster Maze] - Alinhamento e ampliacao da borda dos menus TUI`
+
+* **Versão:** `0.1.4`
+* **Tag Git:** `v0.1.4`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Alinhamento e ampliacao da borda dos menus TUI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.4.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.4** aperfeiçoa o alinhamento das caixas de menus suspensos (dropdowns) no modo TUI. A largura da caixa foi expandida para 22 colunas e foi adotado o cálculo dinâmico de preenchimento (`format_menu_item`), eliminando o problema em que o texto e os atalhos de teclado encostavam ou sobrescreviam a borda vertical direita (`│`).
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Largura Expandida da Caixa:** Submenus ampliados para 22 colunas (`drop_w = 22`), proporcionando 20 colunas de área interna útil.
+* **Formatação Precisa dos Itens:** Inclusão de espaçamento nas extremidades e cálculo exato de caracteres, preservando as bordas intactas.
+* **Pacote de Distribuição:** Atualização dos binários e publicação de `zx81ide-v-0.1.4.zip`.
+
+---
+
 ## [v0.1.3] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.3 [3D Monster Maze] - Correcao no parse UTF-8 das bordas no TUI`
 
