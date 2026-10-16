@@ -81,6 +81,7 @@
   4. Atualização de `src/main.cpp`, `CMakeLists.txt` e `include/core/version.h` para a versão `v0.1.1` (`Sinclair ZX81 (Foundation)` / `3D Monster Maze` / `CLI interativo e modo TUI retro estilo MS-DOS`).
   5. Atualização de `CHANGELOG.md`, `RELEASE.md`, `MANUAL.md` e `OUTLINE.md`.
   6. Compilação e empacotamento completo via `build.ps1`.
+  7. Refinamento visual da TUI: padronização da cor de fundo do desktop para ser homogênea e uniforme em toda a extensão, eliminando o padrão xadrez claro/escuro e mantendo o caractere quadriculado `░` em cinza escuro sobre fundo preto uniforme. Versão incrementada para `v0.1.2` (`Fundo uniforme com quadriculado no desktop TUI`).
 
 ---
 

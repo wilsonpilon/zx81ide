@@ -165,15 +165,12 @@ int run_tui() {
 
         // -------------------------------------------------------------
         // 1. ÁREA DE DESKTOP (Linhas 1 até height - 2)
-        // Quadriculado ASCII em Cinza e Branco estilo MS-DOS dos anos 1990
+        // Quadriculado ASCII uniforme estilo MS-DOS dos anos 1990
+        // Fundo com a mesma cor consistente (sem alternância de claros/escuros)
         // -------------------------------------------------------------
         for (int y = 1; y < height - 1; ++y) {
             for (int x = 0; x < width; ++x) {
-                // Padrão quadriculado alternado de blocos semi-transparentes (░)
-                bool alternate = ((x + y) % 2 == 0);
-                std::string fg = alternate ? Colors::FG_GRAY_DARK : Colors::FG_WHITE;
-                std::string bg = alternate ? Colors::BG_BLACK : Colors::BG_GRAY_DARK;
-                screen.put_cell(x, y, "░", fg, bg);
+                screen.put_cell(x, y, "░", Colors::FG_GRAY_DARK, Colors::BG_BLACK);
             }
         }
 

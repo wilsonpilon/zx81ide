@@ -9,6 +9,16 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.2] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Fundo uniforme com quadriculado no desktop TUI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Alterado (Changed)
+* Ajustada a renderização da área de desktop no modo TUI para utilizar uma cor de fundo estritamente uniforme e contínua, eliminando a alternância xadrez claro/escuro e mantendo o caractere ASCII quadriculado (`░`) texturizado em toda a tela.
+
+---
+
 ## [0.1.1] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "CLI interativo e modo TUI retro estilo MS-DOS"

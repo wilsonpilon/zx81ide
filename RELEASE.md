@@ -4,6 +4,30 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.2] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.2 [3D Monster Maze] - Fundo uniforme com quadriculado no desktop TUI`
+
+* **Versão:** `0.1.2`
+* **Tag Git:** `v0.1.2`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Fundo uniforme com quadriculado no desktop TUI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.2.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.2** aprimora a experiência visual do modo TUI retro estilo MS-DOS. O padrão quadriculado da área de desktop passa a utilizar uma cor de fundo estritamente uniforme em toda a extensão da tela, removendo a alternância de contraste em blocos xadrez e assegurando uma textura suave, autêntica e agradável ao olhar com caracteres ASCII quadriculados (`░`).
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Desktop TUI Padronizado:** Aplicação de cor de fundo homogênea com preenchimento texturizado `░` no padrão monocromático Sinclair ZX-81.
+* **Consistência Visual:** Eliminação de ruído óptico em consoles de alta resolução.
+* **Pacote de Distribuição:** Atualização de binários e geração de `zx81ide-v-0.1.2.zip`.
+
+---
+
 ## [v0.1.1] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.1 [3D Monster Maze] - CLI interativo e modo TUI retro estilo MS-DOS`
 
