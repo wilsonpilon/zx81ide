@@ -249,6 +249,35 @@ std::string extract_file_name(const std::string& path) {
     return path;
 }
 
+std::string expand_tabs(const std::string& input, int tab_size = 4) {
+    std::string output;
+    for (char c : input) {
+        if (c == '\t') {
+            int spaces = tab_size - (output.size() % tab_size);
+            output.append(spaces, ' ');
+        } else {
+            output.push_back(c);
+        }
+    }
+    return output;
+}
+
+std::string format_editor_line(const std::string& raw_line, int scroll_col, int inner_w) {
+    std::string expanded = expand_tabs(raw_line);
+    std::string line_content = "";
+    if (scroll_col < (int)expanded.size()) {
+        line_content = expanded.substr(scroll_col);
+    }
+    if ((int)line_content.size() > inner_w) {
+        line_content = line_content.substr(0, inner_w);
+    }
+    int pad_spaces = inner_w - (int)line_content.size();
+    if (pad_spaces > 0) {
+        line_content.append(pad_spaces, ' ');
+    }
+    return line_content;
+}
+
 } // anonymous namespace
 
 int run_text_editor(const std::string& file_path, EditorPresentation presentation, EditorStyle style) {
@@ -268,7 +297,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 if (!line.empty() && line.back() == '\r') {
                     line.pop_back();
                 }
-                lines.push_back(line);
+                lines.push_back(expand_tabs(line));
             }
             file.close();
         }
@@ -445,20 +474,20 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 buf << theme.frame_fg << theme.frame_bg;
                 buf << "╔"; // Canto superior esquerdo
 
-                // Botao fechar +=*= (quadrado pequeno)
+                // Botao fechar [×] (estilo moderno/retro)
                 buf << "═[";
-                buf << theme.btn_fg << theme.btn_bg << "■";
+                buf << theme.btn_fg << theme.btn_bg << "×";
                 buf << theme.frame_fg << theme.frame_bg << "]═";
 
                 // Titulo com o nome do arquivo
                 std::string title_str = " " + display_name + (modified ? " *" : "") + " ";
-                int available_title_space = win_w - 14; // Reserva espaco para close, maximize e bordas
+                int available_title_space = win_w - 12; // Reserva 12 caracteres fixos: ╔(1) + ═[×]═(5) + ═[▲]═(5) + ╗(1)
                 if ((int)title_str.size() > available_title_space && available_title_space > 0) {
                     title_str = title_str.substr(0, available_title_space);
                 }
 
                 // Linha dupla antes e depois do titulo
-                int remaining_bar = win_w - 14 - (int)title_str.size();
+                int remaining_bar = win_w - 12 - (int)title_str.size();
                 if (remaining_bar < 0) remaining_bar = 0;
                 int left_bar = remaining_bar / 2;
                 int right_bar = remaining_bar - left_bar;
@@ -487,23 +516,15 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
                 buf << theme.frame_fg << theme.frame_bg << "║";
 
-                // Conteudo da linha de texto
+                // Conteudo da linha de texto (formatado para estritamente inner_w colunas)
                 buf << theme.text_fg << theme.text_bg;
                 std::string line_content = "";
                 if (doc_line_idx < (int)lines.size()) {
-                    std::string raw_line = lines[doc_line_idx];
-                    if (scroll_col < (int)raw_line.size()) {
-                        line_content = raw_line.substr(scroll_col);
-                    }
-                }
-                if ((int)line_content.size() > inner_w) {
-                    line_content = line_content.substr(0, inner_w);
+                    line_content = format_editor_line(lines[doc_line_idx], scroll_col, inner_w);
+                } else {
+                    line_content = std::string(inner_w, ' ');
                 }
                 buf << line_content;
-                int pad_spaces = inner_w - (int)line_content.size();
-                if (pad_spaces > 0) {
-                    buf << std::string(pad_spaces, ' ');
-                }
 
                 // Barra de rolagem vertical na borda direita
                 if (vr == 0) {
@@ -549,8 +570,8 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     for (int i = 0; i < remaining_bottom; ++i) buf << theme.frame_fg << theme.frame_bg << "═";
                 }
 
-                // Juncao das barras de rolagem: caractere + de conexao de quadro duplo (╬)
-                buf << theme.frame_fg << theme.frame_bg << "╬";
+                // Juncao das barras de rolagem: simbolo de redimensionamento da janela (◢)
+                buf << theme.btn_fg << theme.btn_bg << "◢";
             }
 
             // Fundo desktop a direita da janela
@@ -702,7 +723,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         continue;
                     }
 
-                    // 1. Botao fechar [■] (Colunas win_x + 2 .. win_x + 4, Linha win_y)
+                    // 1. Botao fechar [×] (Colunas win_x + 2 .. win_x + 4, Linha win_y)
                     if (mpos.Y == win_y && mpos.X >= win_x + 2 && mpos.X <= win_x + 4) {
                         if (modified) {
                             show_exit_dlg = true;
@@ -713,8 +734,8 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         continue;
                     }
 
-                    // 2. Botao maximizar/restaurar (Colunas win_w - 4 .. win_w - 2)
-                    if (mpos.Y == win_y && mpos.X >= win_x + win_w - 4 && mpos.X <= win_x + win_w - 2) {
+                    // 2. Botao maximizar/restaurar (Colunas win_w - 5 .. win_w - 3)
+                    if (mpos.Y == win_y && mpos.X >= win_x + win_w - 5 && mpos.X <= win_x + win_w - 3) {
                         maximized = !maximized;
                         if (!maximized) {
                             win_x = restored_x;
@@ -725,7 +746,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         continue;
                     }
 
-                    // 3. Juncao inferior direita (╬) para redimensionamento
+                    // 3. Juncao inferior direita (◢) para redimensionamento
                     if (mpos.Y == win_y + win_h - 1 && mpos.X == win_x + win_w - 1) {
                         if (!maximized) {
                             is_resizing = true;

@@ -147,6 +147,21 @@
   4. Compilação via `build.ps1 -Clean`, geração do pacote compactado `zx81ide-v-0.1.8.zip`.
   5. Commit, tag e publicação do release no GitHub via `gh release create`.
 
+### Sessão 10 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Correção da extrapolação da área de edição da janela em 2 colunas para a direita.
+  * Escolha de um novo símbolo para o botão de fechamento da janela (substituindo o quadrado `[■]`).
+  * Escolha de um novo símbolo para a junção de redimensionamento da janela (substituindo o `╬`).
+* **Ações Executadas:**
+  1. Identificação e correção da discrepância na linha 0 (borda superior / título), onde reservavam-se 14 colunas em vez de 12 (`╔`, `═[×]═`, `═[▲]═`, `╗`), tornando a barra de título 2 colunas mais estreita que a área de edição.
+  2. Implementação de `format_editor_line()` e `expand_tabs()`, garantindo que tabulações e quebras respeitem estritamente `inner_w` colunas visíveis por linha.
+  3. Adoção do novo botão de fechamento `[×]` (U+00D7), simétrico, universal e perfeitamente legível na fonte JetBrains Nerd Font.
+  4. Adoção do grip triangular `◢` (U+25E2) no canto inferior direito para redimensionamento por mouse.
+  5. Incremento de versão para `v0.1.9` (`Ajuste de alinhamento e novos icones de fechar e redimensionar no editor`).
+  6. Atualização dos documentos vivos (`CMakeLists.txt`, `include/core/version.h`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`).
+  7. Compilação limpa via `build.ps1 -Clean`, geração do pacote `zx81ide-v-0.1.9.zip`, commit, tag `v0.1.9` e publicação no GitHub Releases.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

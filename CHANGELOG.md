@@ -9,6 +9,22 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.9] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Ajuste de alinhamento e novos icones de fechar e redimensionar no editor"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* **Alinhamento e Extrapolação da Área de Edição:**
+  * Corrigida a divergência de 2 colunas entre a barra de título superior e o corpo do editor. A barra superior reservava 14 caracteres fixos em vez dos 12 estritamente ocupados (`╔`, `═[×]═`, `═[▲]═`, `╗`), fazendo a moldura superior ser renderizada 2 colunas mais curta que a área útil de texto e a moldura inferior.
+  * Implementada a rotina `format_editor_line()` com expansão automática de caracteres de tabulação (`\t` para 4 espaços) e garantia de largura exata de `inner_w` colunas por linha de texto, eliminando qualquer salto ou extrapolação à direita.
+
+### Modificado (Changed)
+* **Novo Ícone de Fechamento de Janela (`[×]`):** Substituição do símbolo de quadrado `[■]` pelo clássico `[×]` (multiplication cross U+00D7), muito mais elegante, legível e padronizado em fontes monoespaçadas (como JetBrains Nerd Font).
+* **Novo Símbolo de Redimensionamento da Janela (`◢`):** Substituição da junção em cruz dupla `╬` pelo grip triangular de canto inferior direito `◢` (U+25E2), oferecendo indicação visual imediata de alça de redimensionamento e harmonizando perfeitamente com a ponta da barra de rolagem vertical `▼`.
+
+---
+
 ## [0.1.8] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Implementacao do Editor de Texto Livre Turbo C++ no modo CLI"

@@ -4,6 +4,34 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.9] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.9 [3D Monster Maze] - Ajuste de alinhamento e novos icones de fechar e redimensionar no editor`
+
+* **Versão:** `0.1.9`
+* **Tag Git:** `v0.1.9`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Ajuste de alinhamento e novos icones de fechar e redimensionar no editor`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.9.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.9** traz melhorias pontuais de alinhamento e refinamento estético do subsistema do Editor de Texto Livre Turbo C++ no console CLI. A moldura superior foi milimetricamente alinhada com a largura total da janela (sanando a diferença de 2 colunas que provocava a extrapolação do corpo de texto), e foram adotados símbolos muito mais ergonômicos e compatíveis com fontes modernas (como JetBrains Nerd Font) para as ações de fechamento (`[×]`) e redimensionamento (`◢`).
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Alinhamento Perfeito da Janela:**
+  * Correção do cálculo de caracteres reservados na linha 0 (borda superior / título), passando a reservar exatamente 12 colunas (`╔` + `═[×]═` + `═[▲]═` + `╗`). Anteriormente, o cálculo reservava 14 colunas, resultando em uma barra de título 2 colunas mais estreita que a área de edição.
+  * Formatação uniforme de linhas via `format_editor_line()`, garantindo expansão de `\t` para 4 espaços e extensão estrita de `inner_w` colunas visíveis por linha.
+* **Novos Símbolos de Interface:**
+  * **Botão Fechar (`[×]`):** Substituição do bloco quadrado `[■]` pelo clássico `[×]` (multiplication cross U+00D7), amplamente reconhecido, balanceado e estável em todos os emuladores de terminal.
+  * **Alça de Redimensionamento (`◢`):** Substituição da cruz dupla `╬` pelo grip triangular `◢` (U+25E2) no canto inferior direito, harmonizando perfeitamente com a seta inferior da barra de rolagem `▼` e provendo clara indicação tátil/visual para arrasto com o mouse.
+* **Pacote de Distribuição:** Binário compilado `zx81ide.exe` e pacote compactado `zx81ide-v-0.1.9.zip`.
+
+---
+
 ## [v0.1.8] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.8 [3D Monster Maze] - Implementacao do Editor de Texto Livre Turbo C++ no modo CLI`
 

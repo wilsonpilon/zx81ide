@@ -140,7 +140,7 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
   * `Arquivo` -> `Sair (Alt+X)`
   * `Help` -> `About... (F1)`
 * **Desktop:** Área central com padrão quadriculado ASCII em cinza e branco (`░░▒▒`).
-* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: escuro | v0.1.8`).
+* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: escuro | v0.1.9`).
 * **Atalhos do Teclado:**
   * `Setas Esquerda / Direita`: Alterna entre os menus `Arquivo` e `Help`.
   * `Seta Abaixo / Enter`: Abre o submenu suspenso ou ativa o item selecionado.
@@ -156,13 +156,13 @@ O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo
   * No console CLI interativo: `editor <arquivo.bas>` (ex: `editor main.bas`).
   * Na linha de comando do sistema: `zx81ide editor <arquivo.bas>` ou `zx81ide <arquivo.bas>`.
 * **Características da Janela:**
-  * **Moldura Dupla IBM-PC:** Caracteres `╔`, `═`, `╗`, `║`, `╚`, `╝` e `╬`.
-  * **Área Útil Inicial:** 80 colunas por 25 linhas de escrita (área total da janela 82x27).
-  * **Botão Fechar (`[■]`):** Localizado no canto superior esquerdo da moldura, fechando o editor ao ser clicado pelo mouse.
+  * **Moldura Dupla IBM-PC:** Caracteres `╔`, `═`, `╗`, `║`, `╚`, `╝` e alça triangular `◢`.
+  * **Área Útil Inicial:** 80 colunas por 25 linhas de escrita (área total da janela 82x27 perfeitamente alinhada).
+  * **Botão Fechar (`[×]`):** Localizado no canto superior esquerdo da moldura, fechando o editor ao ser clicado pelo mouse.
   * **Título do Arquivo:** Exibe o nome do arquivo centralizado na barra superior com indicador de modificação (`*`).
   * **Botão Maximizar/Restaurar (`[▲]` e `[↕]`):** Alterna entre janela restaurada e tela cheia (Zoom), acionável por clique ou pela tecla `F5`.
   * **Barras de Rolagem:** Vertical à direita e horizontal inferior com indicador visual (`█`) da posição do cursor.
-  * **Redimensionamento por Mouse:** Caractere de junção `╬` no canto inferior direito para redimensionar a janela dinamicamente com clique e arrasto.
+  * **Redimensionamento por Mouse:** Grip triangular `◢` no canto inferior direito para redimensionar a janela dinamicamente com clique e arrasto.
   * **Movimentação da Janela:** Clique e arrasto na barra de título permite mover a janela sobre o desktop.
 * **Atalhos e Comandos:**
   * `F2` ou `Ctrl+S`: Salva o arquivo no disco imediatamente.
