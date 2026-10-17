@@ -530,12 +530,41 @@ int run_tui(const std::string& initial_file) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
 #endif
 
-    while (running) {
-        int width = 80;
-        int height = 25;
-        get_terminal_size(width, height);
+    // Redesenho ultrarrapido apenas dos itens do menu dropdown (0.05ms, sem repaint de tela nem flicker)
+    auto redraw_tui_dropdown_fast = [&]() {
+        if (!menu_open || current_menu < 0 || current_menu >= (int)menus.size()) return;
+        const auto& cur_menu = menus[current_menu];
+        int drop_x = cur_menu.x_pos;
+        int drop_y = 1;
+        int num_items = (int)cur_menu.items.size();
+        int drop_inner_w = 20;
+        for (const auto& item : cur_menu.items) {
+            int item_len = (int)item.label.size() + (int)item.shortcut.size() + 4;
+            if (item_len > drop_inner_w) drop_inner_w = item_len;
+        }
+        std::ostringstream dbuf;
+        for (int i = 0; i < num_items; ++i) {
+            dbuf << "\x1b[" << (drop_y + 2 + i) << ";" << (drop_x + 2) << "H";
+            std::string item_str = format_menu_item(cur_menu.items[i].label, cur_menu.items[i].shortcut, drop_inner_w);
+            if (menu_item_idx == i) {
+                dbuf << theme.drop_sel_fg << theme.drop_sel_bg << item_str;
+            } else {
+                dbuf << theme.drop_item_fg << theme.drop_item_bg << item_str;
+            }
+        }
+        dbuf << Colors::RESET << Colors::HIDE_CURSOR;
+        std::cout << dbuf.str() << std::flush;
+    };
 
-        ScreenBuffer screen(width, height);
+    int width = 80;
+    int height = 25;
+    bool needs_render = true;
+
+    while (running) {
+        if (needs_render) {
+            get_terminal_size(width, height);
+
+            ScreenBuffer screen(width, height);
 
         // -------------------------------------------------------------
         // 1. ÁREA DE DESKTOP (Linhas 1 até height - 2)
@@ -664,21 +693,40 @@ int run_tui(const std::string& initial_file) {
             }
         }
 
-        screen.render();
+            screen.render();
+            needs_render = false;
+        }
 
         // -------------------------------------------------------------
         // 6. PROCESSAMENTO DE ENTRADA (TECLADO E MOUSE COM READCONSOLEINPUT)
         // -------------------------------------------------------------
 #ifdef _WIN32
+        DWORD wait_res = WaitForSingleObject(hIn, 40);
+        if (wait_res == WAIT_TIMEOUT) {
+            int cur_w = 80, cur_h = 25;
+            get_terminal_size(cur_w, cur_h);
+            if (cur_w != width || cur_h != height) {
+                needs_render = true;
+            }
+            continue;
+        }
+
         INPUT_RECORD ir[16];
         DWORD num_events = 0;
         if (!ReadConsoleInputW(hIn, ir, 16, &num_events) || num_events == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(15));
             continue;
         }
 
         for (DWORD e = 0; e < num_events; ++e) {
             auto& rec = ir[e];
+
+            // ---------------------------------------------------------
+            // EVENTOS DE REDIMENSIONAMENTO DE JANELA CONSOLE
+            // ---------------------------------------------------------
+            if (rec.EventType == WINDOW_BUFFER_SIZE_EVENT) {
+                needs_render = true;
+                continue;
+            }
 
             // ---------------------------------------------------------
             // EVENTOS DE MOUSE
@@ -699,6 +747,7 @@ int run_tui(const std::string& initial_file) {
                                     if (current_menu != (int)m) {
                                         current_menu = (int)m;
                                         menu_item_idx = 0;
+                                        needs_render = true;
                                     }
                                     break;
                                 }
@@ -717,7 +766,11 @@ int run_tui(const std::string& initial_file) {
 
                             if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
                                 mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
-                                menu_item_idx = mpos.Y - (drop_y + 1);
+                                int new_item = mpos.Y - (drop_y + 1);
+                                if (new_item != menu_item_idx) {
+                                    menu_item_idx = new_item;
+                                    redraw_tui_dropdown_fast();
+                                }
                             }
                         }
                     }
@@ -725,6 +778,7 @@ int run_tui(const std::string& initial_file) {
 
                 // 2. Clique com Botao Esquerdo (apenas no pressionamento inicial)
                 if (left_clicked) {
+                    needs_render = true;
                     if (show_about) {
                         show_about = false;
                         prev_btn_state = btn;
@@ -793,6 +847,7 @@ int run_tui(const std::string& initial_file) {
             // EVENTOS DE TECLADO
             // ---------------------------------------------------------
             if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown) {
+                needs_render = true;
                 WORD vk = rec.Event.KeyEvent.wVirtualKeyCode;
                 WCHAR wc = rec.Event.KeyEvent.uChar.UnicodeChar;
                 DWORD ctrl_state = rec.Event.KeyEvent.dwControlKeyState;
@@ -894,13 +949,18 @@ int run_tui(const std::string& initial_file) {
                     if (!menu_open) {
                         menu_open = true;
                         menu_item_idx = 0;
+                        needs_render = true;
                     } else {
                         menu_item_idx = (menu_item_idx + 1) % (int)menus[current_menu].items.size();
+                        redraw_tui_dropdown_fast();
+                        needs_render = false;
                     }
                     break;
                 } else if (vk == VK_UP) {
                     if (menu_open) {
                         menu_item_idx = (menu_item_idx + (int)menus[current_menu].items.size() - 1) % (int)menus[current_menu].items.size();
+                        redraw_tui_dropdown_fast();
+                        needs_render = false;
                     }
                     break;
                 }

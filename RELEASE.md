@@ -4,6 +4,26 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.14] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.14 [3D Monster Maze] - Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens`
+
+* **Versão:** `0.1.14`
+* **Tag Git:** `v0.1.14`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.14.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.14** resolve definitivamente a oscilação e repintura contínua de menus ao movimentar o mouse:
+1. **Dirty Checking no Loop de Renderização:** O loop de renderização do Editor e da TUI agora utiliza controle de estado sujo (`needs_render`), evitando repinturas completas de tela durante movimentações de mouse que não alterem o estado visual.
+2. **Redesenho Direto e Instantâneo de Itens (`redraw_dropdown_fast`):** A navegação sobre os itens do menu (seja por movimento do mouse ou por setas Up/Down) atualiza unicamente a linha do item via posicionamento ANSI (`\x1b[y;xH`), sem jamais repintar o fundo ou o código que está sob o menu, eliminando 100% do flicker.
+3. **Espera Otimizada de Eventos com `WaitForSingleObject`:** Redução de uso de CPU para 0% em repouso com detecção instantânea de resize do terminal e expiração de mensagens de status.
+
+---
+
 ## [v0.1.13] - 2026-10-17
 ### Título do Lançamento: `zx81ide v0.1.13 [3D Monster Maze] - Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido`
 

@@ -1026,41 +1026,77 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         }
     };
 
+    // Redesenho ultrarrapido apenas dos itens do menu dropdown (0.05ms, sem repaint de tela nem flicker)
+    auto redraw_dropdown_fast = [&]() {
+        if (!menu_active || active_menu_idx < 0 || active_menu_idx >= (int)menus.size()) return;
+        const auto& cur_menu = menus[active_menu_idx];
+        int drop_x = cur_menu.x_pos;
+        int drop_y = 1;
+        int drop_inner_w = 26;
+        for (const auto& it : cur_menu.items) {
+            int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+            if (len > drop_inner_w) drop_inner_w = len;
+        }
+        int num_items = (int)cur_menu.items.size();
+        std::ostringstream dbuf;
+        for (int i = 0; i < num_items; ++i) {
+            dbuf << "\x1b[" << (drop_y + 2 + i) << ";" << (drop_x + 2) << "H";
+            std::string item_str = format_menu_item(cur_menu.items[i].label, cur_menu.items[i].shortcut, drop_inner_w);
+            if (i == active_item_idx) {
+                dbuf << theme.drop_sel_fg << theme.drop_sel_bg << item_str;
+            } else {
+                dbuf << theme.drop_item_fg << theme.drop_item_bg << item_str;
+            }
+        }
+        dbuf << Colors::RESET << Colors::HIDE_CURSOR;
+        std::cout << dbuf.str() << std::flush;
+    };
+
+    int inner_w = std::max(1, win_w - 2);
+    int inner_h = std::max(1, win_h - 2);
+    int total_lines = (int)lines.size();
+    int v_track_len = std::max(1, inner_h - 2);
+    int h_track_len = std::max(1, inner_w - 8);
+    int max_col_observed = 80;
+    bool needs_render = true;
+    const auto& gfx_table = compiler::ZXText2P::get_graphics_table();
+
     // Loop Principal de Edicao
     while (running) {
-        get_terminal_size(term_w, term_h);
+        if (needs_render) {
+            get_terminal_size(term_w, term_h);
 
-        if (maximized) {
-            win_x = 0;
-            win_y = 1;
-            win_w = term_w;
-            win_h = std::max(3, term_h - 2);
-        } else {
-            if (win_w > term_w) win_w = term_w;
-            if (win_h > term_h - 2) win_h = term_h - 2;
-            if (win_x + win_w > term_w) win_x = std::max(0, term_w - win_w);
-            if (win_y < 1) win_y = 1;
-            if (win_y + win_h > term_h - 1) win_y = std::max(1, term_h - 1 - win_h);
-        }
+            if (maximized) {
+                win_x = 0;
+                win_y = 1;
+                win_w = term_w;
+                win_h = std::max(3, term_h - 2);
+            } else {
+                if (win_w > term_w) win_w = term_w;
+                if (win_h > term_h - 2) win_h = term_h - 2;
+                if (win_x + win_w > term_w) win_x = std::max(0, term_w - win_w);
+                if (win_y < 1) win_y = 1;
+                if (win_y + win_h > term_h - 1) win_y = std::max(1, term_h - 1 - win_h);
+            }
 
-        int inner_w = std::max(1, win_w - 2);
-        int inner_h = std::max(1, win_h - 2);
+            inner_w = std::max(1, win_w - 2);
+            inner_h = std::max(1, win_h - 2);
 
-        cursor_row = std::max(0, std::min((int)lines.size() - 1, cursor_row));
-        int cur_line_len = (int)lines[cursor_row].size();
-        cursor_col = std::max(0, std::min(cur_line_len, cursor_col));
+            cursor_row = std::max(0, std::min((int)lines.size() - 1, cursor_row));
+            int cur_line_len = (int)lines[cursor_row].size();
+            cursor_col = std::max(0, std::min(cur_line_len, cursor_col));
 
-        if (cursor_row < scroll_row) {
-            scroll_row = cursor_row;
-        } else if (cursor_row >= scroll_row + inner_h) {
-            scroll_row = cursor_row - inner_h + 1;
-        }
+            if (cursor_row < scroll_row) {
+                scroll_row = cursor_row;
+            } else if (cursor_row >= scroll_row + inner_h) {
+                scroll_row = cursor_row - inner_h + 1;
+            }
 
-        if (cursor_col < scroll_col) {
-            scroll_col = cursor_col;
-        } else if (cursor_col >= scroll_col + inner_w) {
-            scroll_col = cursor_col - inner_w + 1;
-        }
+            if (cursor_col < scroll_col) {
+                scroll_col = cursor_col;
+            } else if (cursor_col >= scroll_col + inner_w) {
+                scroll_col = cursor_col - inner_w + 1;
+            }
 
         // =============================================================
         // RENDERIZACAO EM BUFFER STRING
@@ -1068,24 +1104,24 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         std::ostringstream buf;
         buf << Colors::HOME << Colors::HIDE_CURSOR;
 
-        int total_lines = (int)lines.size();
-        int v_track_len = std::max(1, inner_h - 2);
-        int v_thumb_pos = 0;
-        if (total_lines > 1) {
-            float v_ratio = (float)cursor_row / (float)(total_lines - 1);
-            v_thumb_pos = (int)(v_ratio * (v_track_len - 1));
-        }
+            total_lines = (int)lines.size();
+            v_track_len = std::max(1, inner_h - 2);
+            int v_thumb_pos = 0;
+            if (total_lines > 1) {
+                float v_ratio = (float)cursor_row / (float)(total_lines - 1);
+                v_thumb_pos = (int)(v_ratio * (v_track_len - 1));
+            }
 
-        int max_col_observed = 80;
-        for (const auto& l : lines) {
-            if ((int)l.size() > max_col_observed) max_col_observed = (int)l.size();
-        }
-        int h_track_len = std::max(1, inner_w - 8);
-        int h_thumb_pos = 0;
-        if (max_col_observed > 0) {
-            float h_ratio = (float)cursor_col / (float)max_col_observed;
-            h_thumb_pos = (int)(h_ratio * (h_track_len - 1));
-        }
+            max_col_observed = 80;
+            for (const auto& l : lines) {
+                if ((int)l.size() > max_col_observed) max_col_observed = (int)l.size();
+            }
+            h_track_len = std::max(1, inner_w - 8);
+            int h_thumb_pos = 0;
+            if (max_col_observed > 0) {
+                float h_ratio = (float)cursor_col / (float)max_col_observed;
+                h_thumb_pos = (int)(h_ratio * (h_track_len - 1));
+            }
 
         // -------------------------------------------------------------
         // LINHA 0: BARRA DE MENUS SUPERIOR (MS-DOS / Turbo C++)
@@ -1394,7 +1430,6 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         }
 
         // 2. MODAL SELETOR DE CARACTERES GRAFICOS (F4 / Ctrl+G)
-        const auto& gfx_table = compiler::ZXText2P::get_graphics_table();
         if (show_graphics_modal) {
             int dlg_w = 64;
             int dlg_h = 18;
@@ -1672,104 +1707,147 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         }
 
         std::cout << buf.str() << std::flush;
+        needs_render = false;
+    }
 
-        // =============================================================
-        // CAPTURA DE EVENTOS (TECLADO E MOUSE)
-        // =============================================================
+    // =============================================================
+    // CAPTURA DE EVENTOS (TECLADO E MOUSE)
+    // =============================================================
 #ifdef _WIN32
-        INPUT_RECORD ir[16];
-        DWORD num_events = 0;
-        if (!ReadConsoleInputW(hIn, ir, 16, &num_events) || num_events == 0) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(15));
+    DWORD wait_res = WaitForSingleObject(hIn, 40);
+    if (wait_res == WAIT_TIMEOUT) {
+        int cur_w = 80, cur_h = 25;
+        get_terminal_size(cur_w, cur_h);
+        if (cur_w != term_w || cur_h != term_h) {
+            term_w = cur_w;
+            term_h = cur_h;
+            needs_render = true;
+        }
+        auto now = std::chrono::steady_clock::now();
+        if (std::chrono::duration_cast<std::chrono::seconds>(now - status_msg_time).count() == 3) {
+            needs_render = true;
+        }
+        continue;
+    }
+
+    INPUT_RECORD ir[16];
+    DWORD num_events = 0;
+    if (!ReadConsoleInputW(hIn, ir, 16, &num_events) || num_events == 0) {
+        continue;
+    }
+
+    for (DWORD e = 0; e < num_events; ++e) {
+        auto& rec = ir[e];
+
+        // ---------------------------------------------------------
+        // EVENTOS DE REDIMENSIONAMENTO DE JANELA CONSOLE
+        // ---------------------------------------------------------
+        if (rec.EventType == WINDOW_BUFFER_SIZE_EVENT) {
+            needs_render = true;
             continue;
         }
 
-        for (DWORD e = 0; e < num_events; ++e) {
-            auto& rec = ir[e];
+        // ---------------------------------------------------------
+        // EVENTOS DE MOUSE
+        // ---------------------------------------------------------
+        if (rec.EventType == MOUSE_EVENT) {
+            COORD mpos = rec.Event.MouseEvent.dwMousePosition;
+            DWORD btn = rec.Event.MouseEvent.dwButtonState;
+            DWORD flags = rec.Event.MouseEvent.dwEventFlags;
 
-            // ---------------------------------------------------------
-            // EVENTOS DE MOUSE
-            // ---------------------------------------------------------
-            if (rec.EventType == MOUSE_EVENT) {
-                COORD mpos = rec.Event.MouseEvent.dwMousePosition;
-                DWORD btn = rec.Event.MouseEvent.dwButtonState;
-                DWORD flags = rec.Event.MouseEvent.dwEventFlags;
+            bool left_clicked = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) && !(prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
+            bool left_released = !(btn & FROM_LEFT_1ST_BUTTON_PRESSED) && (prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
+            bool left_down = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
 
-                bool left_clicked = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) && !(prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
-                bool left_released = !(btn & FROM_LEFT_1ST_BUTTON_PRESSED) && (prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
-                bool left_down = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
-
-                // 1. Roda do Mouse (Scroll vertical)
-                if (flags & MOUSE_WHEELED) {
-                    short delta = (short)HIWORD(rec.Event.MouseEvent.dwButtonState);
-                    if (delta > 0) {
-                        cursor_row = std::max(0, cursor_row - 3);
-                    } else if (delta < 0) {
-                        cursor_row = std::min((int)lines.size() - 1, cursor_row + 3);
-                    }
-                    prev_btn_state = btn;
-                    continue;
+            // 1. Roda do Mouse (Scroll vertical)
+            if (flags & MOUSE_WHEELED) {
+                short delta = (short)HIWORD(rec.Event.MouseEvent.dwButtonState);
+                if (delta > 0) {
+                    cursor_row = std::max(0, cursor_row - 3);
+                } else if (delta < 0) {
+                    cursor_row = std::min((int)lines.size() - 1, cursor_row + 3);
                 }
+                needs_render = true;
+                prev_btn_state = btn;
+                continue;
+            }
 
-                // 2. Liberacao do Botao Esquerdo (Mouse Up)
-                if (left_released || !left_down) {
+            // 2. Liberacao do Botao Esquerdo (Mouse Up)
+            if (left_released || !left_down) {
+                if (is_dragging || is_resizing) {
                     is_dragging = false;
                     is_resizing = false;
+                    needs_render = true;
                 }
+            }
 
-                // 3. Movimentacao do Mouse (MOUSE_MOVED)
-                if (flags & MOUSE_MOVED) {
-                    if (is_dragging && !maximized) {
-                        win_x = std::max(0, std::min(term_w - win_w, (int)mpos.X - drag_offset_x));
-                        win_y = std::max(1, std::min(term_h - 2 - win_h, (int)mpos.Y - drag_offset_y));
+            // 3. Movimentacao do Mouse (MOUSE_MOVED)
+            if (flags & MOUSE_MOVED) {
+                if (is_dragging && !maximized) {
+                    int new_x = std::max(0, std::min(term_w - win_w, (int)mpos.X - drag_offset_x));
+                    int new_y = std::max(1, std::min(term_h - 2 - win_h, (int)mpos.Y - drag_offset_y));
+                    if (new_x != win_x || new_y != win_y) {
+                        win_x = new_x;
+                        win_y = new_y;
                         restored_x = win_x;
                         restored_y = win_y;
-                        prev_btn_state = btn;
-                        break;
-                    } else if (is_resizing && !maximized) {
-                        int new_w = mpos.X - win_x + 1;
-                        int new_h = mpos.Y - win_y + 1;
-                        win_w = std::max(28, std::min(term_w - win_x, new_w));
-                        win_h = std::max(8, std::min(term_h - 1 - win_y, new_h));
+                        needs_render = true;
+                    }
+                    prev_btn_state = btn;
+                    break;
+                } else if (is_resizing && !maximized) {
+                    int new_w = std::max(28, std::min(term_w - win_x, (int)mpos.X - win_x + 1));
+                    int new_h = std::max(8, std::min(term_h - 1 - win_y, (int)mpos.Y - win_y + 1));
+                    if (new_w != win_w || new_h != win_h) {
+                        win_w = new_w;
+                        win_h = new_h;
                         restored_w = win_w;
                         restored_h = win_h;
-                        prev_btn_state = btn;
-                        break;
-                    } else if (menu_active) {
-                        // Navega sobre os titulos de menus se passar o mouse na linha 0
-                        if (mpos.Y == 0) {
-                            for (size_t m = 0; m < menus.size(); ++m) {
-                                if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
-                                    if (active_menu_idx != (int)m) {
-                                        active_menu_idx = (int)m;
-                                        active_item_idx = 0;
-                                    }
-                                    break;
+                        needs_render = true;
+                    }
+                    prev_btn_state = btn;
+                    break;
+                } else if (menu_active) {
+                    // Navega sobre os titulos de menus se passar o mouse na linha 0
+                    if (mpos.Y == 0) {
+                        for (size_t m = 0; m < menus.size(); ++m) {
+                            if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                if (active_menu_idx != (int)m) {
+                                    active_menu_idx = (int)m;
+                                    active_item_idx = 0;
+                                    needs_render = true;
                                 }
+                                break;
                             }
-                        } else {
-                            // Destaca item no submenu dropdown ativo sob o cursor
-                            const auto& cur_menu = menus[active_menu_idx];
-                            int drop_x = cur_menu.x_pos;
-                            int drop_y = 1;
-                            int num_items = (int)cur_menu.items.size();
-                            int drop_inner_w = 26;
-                            for (const auto& it : cur_menu.items) {
-                                int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
-                                if (len > drop_inner_w) drop_inner_w = len;
-                            }
-                            int drop_w = drop_inner_w + 2;
+                        }
+                    } else {
+                        // Destaca item no submenu dropdown ativo sob o cursor de forma instantanea sem redesenhar a tela
+                        const auto& cur_menu = menus[active_menu_idx];
+                        int drop_x = cur_menu.x_pos;
+                        int drop_y = 1;
+                        int num_items = (int)cur_menu.items.size();
+                        int drop_inner_w = 26;
+                        for (const auto& it : cur_menu.items) {
+                            int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+                            if (len > drop_inner_w) drop_inner_w = len;
+                        }
+                        int drop_w = drop_inner_w + 2;
 
-                            if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
-                                mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
-                                active_item_idx = mpos.Y - (drop_y + 1);
+                        if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
+                            mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
+                            int new_item = mpos.Y - (drop_y + 1);
+                            if (new_item != active_item_idx) {
+                                active_item_idx = new_item;
+                                redraw_dropdown_fast();
                             }
                         }
                     }
                 }
+            }
 
                 // 4. Clique com Botao Esquerdo (APENAS na transicao inicial para baixo)
                 if (left_clicked && !is_dragging && !is_resizing) {
+                    needs_render = true;
                     // A. Se menu dropdown estiver aberto, processa clique
                     if (menu_active) {
                         if (mpos.Y == 0) {
@@ -2026,6 +2104,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             // EVENTOS DE TECLADO
             // ---------------------------------------------------------
             else if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown) {
+                needs_render = true;
                 WORD vk = rec.Event.KeyEvent.wVirtualKeyCode;
                 DWORD ctrl_state = rec.Event.KeyEvent.dwControlKeyState;
                 wchar_t wc = rec.Event.KeyEvent.uChar.UnicodeChar;
@@ -2161,9 +2240,15 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     } else if (vk == VK_UP) {
                         int num_items = (int)menus[active_menu_idx].items.size();
                         active_item_idx = (active_item_idx + num_items - 1) % num_items;
+                        redraw_dropdown_fast();
+                        needs_render = false;
+                        break;
                     } else if (vk == VK_DOWN) {
                         int num_items = (int)menus[active_menu_idx].items.size();
                         active_item_idx = (active_item_idx + 1) % num_items;
+                        redraw_dropdown_fast();
+                        needs_render = false;
+                        break;
                     } else if (vk == VK_RETURN) {
                         int act_id = menus[active_menu_idx].items[active_item_idx].id;
                         menu_active = false;

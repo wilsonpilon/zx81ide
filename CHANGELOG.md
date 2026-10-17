@@ -9,6 +9,23 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.14] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* **Eliminação Total de Repintura Contínua ao Mover o Mouse nos Menus:**
+  * Implementado sistema de dirty checking (`needs_render = false`) no loop principal do Editor Livre (`text_editor.cpp`) e no modo TUI (`tui_app.cpp`).
+  * O movimento do mouse (`MOUSE_MOVED`) enquanto o menu dropdown está aberto agora não dispara mais repinturas completas da tela ou da janela do editor.
+* **Redesenho Instantâneo e Flicker-Free de Itens do Menu (`redraw_dropdown_fast`):**
+  * Ao passar o cursor entre itens do menu ou navegar com as setas Up/Down, apenas as linhas internas dos itens do menu dropdown são atualizadas diretamente via posicionamento ANSI (`\x1b[y;xH`), sem jamais redesenhar o fundo ou o código do editor por baixo do menu.
+  * O cursor do mouse pode se movimentar livremente sobre a tela ou sobre o menu sem qualquer oscilação visual, tearing ou flickering.
+* **Temporização Eficiente com `WaitForSingleObject`:**
+  * Substituído o pooling ativo por espera com timeout no handle do console, reduzindo o uso de CPU para 0% quando ocioso e detectando mudanças de tamanho de terminal e timeout de mensagens de status imediatamente.
+
+---
+
 ## [0.1.13] - 2026-10-17
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido"

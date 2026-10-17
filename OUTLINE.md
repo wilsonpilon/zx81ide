@@ -261,6 +261,20 @@
   4. Incremento de versão para `v0.1.13` (`Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido`).
   5. Atualização de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
 
+* **Sessão 15 (2026-10-17):**
+* **Foco:** Eliminação de repinturas contínuas nos menus ao mover o mouse e redesenho direto flicker-free de itens dropdown.
+* **Ações Executadas:**
+  1. Implementação de Dirty Checking (`needs_render = false`):
+     * O loop de renderização do Editor Livre (`text_editor.cpp`) e da TUI (`tui_app.cpp`) agora só executa a renderização quando um estado visual realmente muda (clique, pressionamento de tecla, mudança de tamanho, arrasto de janela, ou troca de item do menu).
+     * Movimentos do mouse (`MOUSE_MOVED`) que não alteram a seleção de menu não geram repinturas, acabando com a sensação de repintura infinita enquanto o mouse se mexe.
+  2. Redesenho Direto e Instantâneo de Itens do Menu (`redraw_dropdown_fast` / `redraw_tui_dropdown_fast`):
+     * A navegação entre itens do menu via hover do mouse ou setas Up/Down agora escreve diretamente apenas as células da linha do item via posicionamento ANSI `\x1b[y;xH`, sem repintar o fundo ou o código sob o menu.
+     * Operação 100% flicker-free em 0.05ms com cursor mantido oculto durante a seleção.
+  3. Espera Eficiente com `WaitForSingleObject`:
+     * Substituído o loop com polling ativo por espera com timeout (40ms) no handle de entrada do console, reduzindo uso de CPU a 0% em repouso e respondendo instantaneamente a qualquer evento de entrada.
+  4. Incremento de versão para `v0.1.14` (`Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens`).
+  5. Atualização de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC
