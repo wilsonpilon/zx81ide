@@ -162,6 +162,44 @@
   6. Atualização dos documentos vivos (`CMakeLists.txt`, `include/core/version.h`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`).
   7. Compilação limpa via `build.ps1 -Clean`, geração do pacote `zx81ide-v-0.1.9.zip`, commit, tag `v0.1.9` e publicação no GitHub Releases.
 
+### Sessão 11 - 17/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Implementação de destaque de sintaxe (syntax highlighting) para ZX-81 BASIC.
+  * Incorporação completa do algoritmo do programa `third_party/zxtxt2p/zxtext2p.c` nativamente em C++, sem depender de binários externos.
+  * Suporte a programas com e sem numeração de linha, com labels/rótulos (`@loop`) estilo Basic Dignified Suite (MSX), continuação de linhas com `\`, comentários com `#` e vídeo inverso com `%`.
+  * Permitir salvar em ASCII `.BAS` e compilar/salvar no formato binário `.P` do ZX-81 direto pelo editor ou CLI, exibindo os mesmos erros e diagnósticos com número de linha.
+  * Adicionar opções do compilador (`-l`, `-s`, `-i`) nas configurações persistidas via SQLite.
+  * Criar seletor interativo de caracteres gráficos do ZX-81 (baseado na documentação do zxtext2p) que insere a sequência de escape correspondente (`\:'`, `\::`, etc.) no cursor do editor.
+* **Ações Executadas:**
+  1. Criação do compilador C++17 nativo em `include/compiler/zxtext2p.h` e `src/compiler/zxtext2p.cpp`:
+     * Tabela completa de tokens Sinclair ZX-81 (255 a 189) e caracteres individuais (0 a 127).
+     * 22 sequências de escape de caracteres de blocos gráficos (`\:'`, `\::`, etc.), além de `\"`, `\#` e `%X`.
+     * Codificador de ponto flutuante ZX-81 de 5 bytes (`0x7E` + expoente + mantissa de 4 bytes).
+     * Resolução de labels em dois passos (Passo 1: numeração automática e tabela de símbolos; Passo 2: substituição de referências e geração de tokens).
+     * Estruturação do binário `.P`: 116 bytes de variáveis de sistema (`0x4009`), linhas de código com NEWLINE (`0x76`), `D_FILE` (793 bytes) e `VARS`.
+     * Validação contra `third_party/zxtxt2p/zxtext2p.exe`: hash SHA-256 idêntico byte a byte.
+  2. Implementação do Syntax Highlighting no editor de texto (`src/editor/text_editor.cpp`):
+     * Tokenizador com realce semântico para palavras-chave ZX-81, comentários (`#` e `REM`), strings, números literais, labels (`@loop`), escapes gráficos e operadores.
+     * Paletas integradas aos 4 temas monocromáticos ZX-81 (`normal`, `invertido`, `escuro`, `claro`).
+     * Renderização coluna por coluna com contagem precisa de largura visual para evitar extrapolação das margens da janela.
+  3. Criação do Seletor Modal de Caracteres Gráficos (`F4` / `Ctrl+G`):
+     * Grade interativa de 24 blocos gráficos com caracteres Unicode representativos, sequências de escape ZXText2P, descrições e códigos hexadecimais.
+     * Navegação por setas e mouse; inserção direta no ponto do cursor.
+  4. Compilação e Configuração Integradas no Editor:
+     * Tecla `F9` / `Ctrl+B`: Salva `.BAS`, compila para `.P` e exibe relatório de sucesso ou modal de erro detalhado com salto automático para a linha da falha.
+     * Tecla `F7` / `Ctrl+T`: Modal de configuração do compilador (modo de rótulos, linha inicial, incremento).
+     * Tecla `F1`: Modal de ajuda com atalhos de teclado.
+     * Tecla `F2` / `Ctrl+S`: Salvar em disco.
+  5. Novos Comandos CLI e Persistência SQLite:
+     * Comandos `compile` e `compile-chars` adicionados ao console interativo e à linha de comando.
+     * Preferências do compilador persistidas na tabela `settings` do SQLite (`compiler.labels_mode`, `compiler.start_line`, `compiler.line_increment`).
+     * Item `Editor` adicionado ao menu `Arquivo` no modo TUI com atalhos `F3` e `E`.
+  6. Incremento de versão para `v0.1.10` (`Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos`).
+  7. Atualização completa de `CMakeLists.txt`, `include/core/version.h`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`.
+  8. Build limpo via `build.ps1 -Clean`, geração do pacote de distribuição `zx81ide-v-0.1.10.zip`, commit, criação da tag Git `v0.1.10` e publicação no GitHub Releases.
+
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

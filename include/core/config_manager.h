@@ -28,6 +28,14 @@ public:
     bool is_theme_configured();
     bool prompt_theme_selection_if_needed();
 
+    // Configuracoes do Compilador ZXText2P
+    bool get_compiler_labels_mode();
+    bool set_compiler_labels_mode(bool enabled);
+    int get_compiler_start_line();
+    bool set_compiler_start_line(int line);
+    int get_compiler_line_increment();
+    bool set_compiler_line_increment(int inc);
+
     static bool is_valid_theme(const std::string& theme_name);
     static std::vector<std::string> get_available_themes();
 

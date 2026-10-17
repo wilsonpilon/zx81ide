@@ -4,6 +4,63 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.10] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.10 [3D Monster Maze] - Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos`
+
+* **Versão:** `0.1.10`
+* **Tag Git:** `v0.1.10`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.10.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.10** atinge um marco de maturidade técnica fundamental no projeto **zx81ide**, integrando de forma 100% nativa em C++ o algoritmo de compilação e tokenização do **ZXText2P** (dispensando qualquer binário externo), adicionando realce de sintaxe em tempo real (Syntax Highlighting) para Sinclair BASIC e formato de labels no editor de texto, e introduzindo uma central de caracteres gráficos e de bloco do ZX-81 acessível por atalho modal (`F4` / `Ctrl+G`).
+
+Além disso, o fluxo de desenvolvimento agora permite compilar e salvar arquivos `.P` diretamente do editor (`F9`), salvando o código ASCII `.BAS` (`F2`), com feedback imediato de sucesso ou diagnóstico de erros de compilação com pulo automático para a linha da falha.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Compilador ZXText2P C++ Nativo Incorporado:**
+  * Reimplementação completa em C++ moderno (`include/compiler/zxtext2p.h`, `src/compiler/zxtext2p.cpp`) baseada na especificação do utilitário `zxtext2p`.
+  * Geração do formato binário `.P` com exatidão byte-a-byte (validado via hash criptográfico SHA-256 idêntico ao gerado pelo binário original de referência).
+  * Suporte a 100% dos recursos do ZXText2P:
+    * Modo tradicional numerado e modo estruturado com labels (`@loop: ... GOTO @loop`, estilo Dignified Suite).
+    * Parâmetros configuráveis de linha inicial (`-s`) e incremento de linhas (`-i`).
+    * Continuação de linha com barra invertida (`\`).
+    * Comentários com `#` e ignoramento de linhas em branco.
+    * Video inverso prefixado com `%` (`%X` = char code | 128).
+    * Blocos gráficos via escape `\xy` (`\:'`, `\::`, `\' `, `\##`, etc.) e aspas escapadas `\"`.
+    * Codificação matemática em ponto flutuante de 5 bytes do ZX-81 para todas as constantes numéricas.
+    * Geração das 116 System Variables (`0x4009`), Display File (`D_FILE`) e bloco `VARS`.
+* **Destaque de Sintaxe (Syntax Highlighting) no Editor:**
+  * Analisador léxico integrado que colore e destaca em tempo real:
+    * Palavras-chave do Sinclair ZX-81 (em negrito de alto contraste).
+    * Comentários `#` e comandos `REM` (em tom suave atenuado).
+    * Strings e textos entre aspas duplas.
+    * Constantes numéricas e números de linha.
+    * Definições e chamadas de labels (`@loop`).
+    * Caracteres gráficos e escapes do ZX-81 (com destaque em bloco invertido).
+  * Renderização estrita em colunas que preserva rigorosamente a geometria da janela sem extrapolação.
+* **Seletor Visual de Caracteres Gráficos (`F4` / `Ctrl+G`):**
+  * Diálogo modal interativo em grade apresentando os 24 caracteres gráficos e blocos do ZX-81.
+  * Exibição visual com glifos Unicode aproximados, código de escape do ZXText2P, descrição e código interno do Sinclair ZX-81.
+  * Inserção com tecla `Enter` ou clique do mouse diretamente na posição do cursor do editor.
+* **Compilação e Salvamento Direto no Editor (`F9` / `Ctrl+B`):**
+  * Compilação instantânea do código em edição para binário `.P`.
+  * Diálogo modal de relatório em caso de sucesso com contagem de bytes e linhas.
+  * Diálogo de diagnóstico em caso de erro, com movimentação automática do cursor para a linha com defeito.
+* **Comandos no Console CLI:**
+  * Comando `compile <arquivo.bas> [-o <saida.p>] [-l] [-s <inicio>] [-i <incremento>]`.
+  * Comando `compile-chars` listando a tabela de blocos gráficos no terminal.
+* **Configurações Persistidas em SQLite:**
+  * Configurações `compiler.labels_mode`, `compiler.start_line` e `compiler.line_increment` armazenadas no banco `zx81ide.db`.
+
+---
+
 ## [v0.1.9] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.9 [3D Monster Maze] - Ajuste de alinhamento e novos icones de fechar e redimensionar no editor`
 

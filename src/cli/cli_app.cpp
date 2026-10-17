@@ -5,6 +5,7 @@
 #include "core/version.h"
 #include "core/config_manager.h"
 #include "core/project.h"
+#include "compiler/zxtext2p.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -76,6 +77,11 @@ void print_cli_commands() {
     std::cout << "    version, ver                      Exibe os detalhes de versao e codenames\n";
     std::cout << "    clear, cls                        Limpa a tela do console\n";
     std::cout << "    exit, quit, q                     Encerra o zx81ide\n\n";
+
+    std::cout << "  Compilador ZXText2P C++ Nativo (BASIC -> .P):\n";
+    std::cout << "    compile <arquivo.bas> [-o saida.p] [-l] [-s inicio] [-i incr]\n";
+    std::cout << "                                      Compila codigo BASIC/labels diretamente para .P\n";
+    std::cout << "    compile-chars                     Lista caracteres graficos ZX-81 e codigos de escape\n\n";
 
     std::cout << "  Gestao de Temas e Configuracoes SQLite:\n";
     std::cout << "    theme                             Exibe o tema atual e temas disponiveis\n";
@@ -387,6 +393,94 @@ void handle_project_command(const std::vector<std::string>& tokens) {
     }
 }
 
+void handle_compile_chars_command() {
+    const auto& table = compiler::ZXText2P::get_graphics_table();
+    std::cout << "\n=== Caracteres Graficos e Escapes ZXText2P do Sinclair ZX-81 ===\n";
+    std::cout << " Glifo | Escape | Codigo ZX | Descricao\n";
+    std::cout << "-------+--------+-----------+-----------------------------------------\n";
+    for (const auto& item : table) {
+        std::cout << "   " << item.glyph_utf8 << "   |  " << item.escape_seq;
+        if (item.escape_seq.size() < 4) std::cout << " ";
+        std::cout << "  |   " << item.zx_code;
+        if (item.zx_code < 10) std::cout << "       | ";
+        else if (item.zx_code < 100) std::cout << "      | ";
+        else std::cout << "     | ";
+        std::cout << item.description << "\n";
+    }
+    std::cout << "----------------------------------------------------------------------\n";
+    std::cout << "Dica: No editor de texto, pressione F4 ou Ctrl+G para abrir o seletor visual!\n\n";
+}
+
+void handle_compile_command(const std::vector<std::string>& tokens) {
+    if (tokens.size() < 2) {
+        std::cout << "\nUso: compile <arquivo.bas> [-o <saida.p>] [-l] [-s <inicio>] [-i <incremento>]\n";
+        std::cout << "Exemplos:\n";
+        std::cout << "  compile jogo.bas\n";
+        std::cout << "  compile jogo.bas -o jogo.p -l -s 10 -i 5\n";
+        std::cout << "Opcoes:\n";
+        std::cout << "  -o <arquivo.p>   Especifica o nome do arquivo .P de saida\n";
+        std::cout << "  -l               Ativa o modo de labels (@loop: ... GOTO @loop)\n";
+        std::cout << "  -s <linha>       Define a linha inicial no modo de labels (default: 10)\n";
+        std::cout << "  -i <incremento>  Define o incremento entre linhas no modo de labels (default: 2)\n\n";
+        return;
+    }
+
+    std::string in_file = tokens[1];
+    std::string out_file = "";
+    auto& cfg = core::ConfigManager::instance();
+    compiler::CompilerOptions opts;
+    opts.use_labels = cfg.get_compiler_labels_mode();
+    opts.start_line = cfg.get_compiler_start_line();
+    opts.line_increment = cfg.get_compiler_line_increment();
+
+    for (size_t i = 2; i < tokens.size(); ++i) {
+        if (tokens[i] == "-l") {
+            opts.use_labels = true;
+        } else if (tokens[i] == "-o" && i + 1 < tokens.size()) {
+            out_file = tokens[++i];
+        } else if (tokens[i] == "-s" && i + 1 < tokens.size()) {
+            try { opts.start_line = std::stoi(tokens[++i]); } catch (...) {}
+        } else if (tokens[i] == "-i" && i + 1 < tokens.size()) {
+            try { opts.line_increment = std::stoi(tokens[++i]); } catch (...) {}
+        }
+    }
+
+    if (out_file.empty()) {
+        out_file = in_file;
+        size_t dot = out_file.find_last_of('.');
+        if (dot != std::string::npos) {
+            out_file = out_file.substr(0, dot) + ".p";
+        } else {
+            out_file += ".p";
+        }
+    }
+
+    std::cout << "[Compilador ZXText2P C++] Compilando '" << in_file << "' -> '" << out_file << "'...\n";
+    if (opts.use_labels) {
+        std::cout << "  Modo            : Labels ativado (inicio=" << opts.start_line 
+                  << ", incremento=" << opts.line_increment << ")\n";
+    } else {
+        std::cout << "  Modo            : Numeracao explicita\n";
+    }
+
+    auto res = compiler::ZXText2P::compile_file(in_file, out_file, opts);
+    if (res.success) {
+        std::cout << "[OK] Compilacao concluida com sucesso!\n";
+        std::cout << "  Arquivo de Saida: " << out_file << "\n";
+        std::cout << "  Tamanho Total .P: " << res.total_p_bytes << " bytes\n";
+        std::cout << "  Linhas BASIC    : " << res.total_lines << "\n";
+        std::cout << "  Codigo BASIC    : " << res.program_bytes << " bytes\n";
+        std::cout << "Arquivo .P pronto para uso em emuladores (EightyOne) ou gravacao em fita ZX-81!\n\n";
+    } else {
+        std::cout << "[ERRO DE COMPILACAO]\n";
+        if (res.error_line > 0) {
+            std::cout << "  Linha " << res.error_line << ": " << res.error_message << "\n\n";
+        } else {
+            std::cout << "  " << res.error_message << "\n\n";
+        }
+    }
+}
+
 } // anonymous namespace
 
 int run_interactive_cli() {
@@ -428,6 +522,10 @@ int run_interactive_cli() {
             handle_config_command(tokens);
         } else if (primary_cmd == "project" || primary_cmd == "proj") {
             handle_project_command(tokens);
+        } else if (primary_cmd == "compile" || primary_cmd == "comp" || primary_cmd == "zxtext2p") {
+            handle_compile_command(tokens);
+        } else if (primary_cmd == "compile-chars" || primary_cmd == "chars") {
+            handle_compile_chars_command();
         } else if (primary_cmd == "editor" || primary_cmd == "edit") {
             std::string file_to_edit = "NONAME.BAS";
             if (tokens.size() > 1) {

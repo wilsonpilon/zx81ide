@@ -9,6 +9,49 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.10] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Compilador ZXText2P Nativo em C++ (`include/compiler/zxtext2p.h`, `src/compiler/zxtext2p.cpp`):**
+  * Portabilidade e incorporação total do algoritmo ZXText2P em C++ moderno no próprio executável `zx81ide`, sem dependência de binários externos.
+  * Suporte a programas em Sinclair BASIC com números de linha explícitos (`10 PRINT "OI"`) e programas modulares estruturados com labels (`@loop: ... GOTO @loop`, estilo Dignified Suite).
+  * Conversor e gerador estrito de binários `.P` do Sinclair ZX-81, gerando:
+    * As 116 System Variables originais a partir de `0x4009` (endereços de `D_FILE`, `VARS`, `E_LINE`, `CH_ADD`, `STKBOT`, flags PAL/NTSC, etc.).
+    * Linhas de programa tokenizadas com identificador big-endian, comprimento little-endian e delimitador `0x76` (NEWLINE).
+    * Suporte e codificação inline de ponto flutuante de 5 bytes do ZX-81 (marcador `0x7E` + expoente e mantissa) para todas as constantes numéricas.
+    * Geração do Display File (`D_FILE` com 24 linhas de 32 espaços e terminadores `0x76`) e bloco de variáveis (`VARS` com `0x80, 0x76`).
+    * Tratamento completo de caracteres de vídeo inverso (`%X`), aspas escapadas (`\"`), símbolos pound (`\#`), e caracteres de blocos gráficos (`\xy`).
+    * Validação com SHA-256 idêntico byte a byte aos arquivos gerados pelo utilitário oficial `zxtext2p.exe`.
+* **Destaque de Sintaxe ZX-81 (Syntax Highlighting) no Editor:**
+  * Realce léxico em tempo real integrado à janela do editor, adaptado à paleta monocromática estrita do ZX-81:
+    * **Palavras-chave e Tokens:** `PRINT`, `LET`, `IF`, `THEN`, `FOR`, `TO`, `STEP`, `NEXT`, `GOTO`, `GOSUB`, `REM`, `CLS`, `INPUT`, `PAUSE`, `PLOT`, etc.
+    * **Comentários:** `#` (estilo zxtext2p) e comandos `REM` destacados com atenuação visual.
+    * **Strings:** Textos literais entre aspas com identificação de escapes internos.
+    * **Números e Linhas:** Literais numéricos e números de instrução destacados.
+    * **Labels:** Definições `@label:` e chamadas `@label` identificadas com destaque.
+    * **Caracteres Gráficos e Inversos:** Escapes `\xy`, `\::`, `\:'`, `%X` exibidos com contraste especial.
+    * Garantia estrita de renderização de colunas (largura fixa `inner_w`), mantendo o alinhamento da janela 100% perfeito.
+* **Seletor Visual de Caracteres Gráficos do ZX-81 (`F4` / `Ctrl+G`):**
+  * Diálogo modal interativo em grade exibindo os 24 blocos gráficos e escapes do Sinclair ZX-81.
+  * Visualização gráfica em UTF-8 (`▘`, `▝`, `▀`, `▖`, `▌`, `▞`, `▛`, `█`, `░`, `▒`, `▓`, etc.), código de escape correspondente (`\:'`, `\::`, `\' `, etc.), descrição em português e código interno do ZX-81.
+  * Navegação por setas (`Cima`, `Baixo`, `Esquerda`, `Direita`) ou mouse e tecla `Enter` para inserção direta no cursor do editor.
+* **Compilação e Salvamento Direto no Editor (`F9` / `Ctrl+B`):**
+  * Atalho `F9` compila instantaneamente o código aberto para o formato binário `.P`.
+  * Em caso de sucesso, grava o arquivo `.P` e exibe relatório de bytes e linhas.
+  * Em caso de erro de sintaxe, exibe diálogo modal com a linha exata e a descrição da falha, posicionando o cursor automaticamente na linha problemática.
+* **Modal de Parâmetros do Compilador (`F7` / `Ctrl+T`):**
+  * Configuração interativa do modo de labels (`-l`), linha inicial (`-s`) e incremento (`-i`), persistida no banco SQLite `zx81ide.db`.
+* **Comandos no Console CLI:**
+  * Comando `compile <arquivo.bas> [-o <saida.p>] [-l] [-s <inicio>] [-i <incremento>]`.
+  * Comando `compile-chars` para exibição rápida da tabela de caracteres gráficos e seus escapes no console.
+* **Integração na TUI Retro:**
+  * Submenu Arquivo atualizado com opção `Editor` (`F3`) e atalhos globais.
+
+---
+
 ## [0.1.9] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Ajuste de alinhamento e novos icones de fechar e redimensionar no editor"

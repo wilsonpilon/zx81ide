@@ -164,9 +164,17 @@ O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo
   * **Barras de Rolagem:** Vertical à direita e horizontal inferior com indicador visual (`█`) da posição do cursor.
   * **Redimensionamento por Mouse:** Grip triangular `◢` no canto inferior direito para redimensionar a janela dinamicamente com clique e arrasto.
   * **Movimentação da Janela:** Clique e arrasto na barra de título permite mover a janela sobre o desktop.
-* **Atalhos e Comandos:**
-  * `F2` ou `Ctrl+S`: Salva o arquivo no disco imediatamente.
+  * **Destaque de Sintaxe ZX-81 (Syntax Highlighting):** Realce automático em tempo real para palavras-chave (PRINT, FOR, NEXT, IF, etc. em alto contraste/negrito), números e linhas, strings entre aspas, comentários `#` e comandos `REM`, definições/chamadas de labels (`@loop`), e caracteres gráficos/escapes do ZX-81 (`\:'`, `\::`, `%X`).
+  * **Seletor de Caracteres Gráficos e de Bloco (`F4` ou `Ctrl+G`):** Abre uma janela modal exibindo a tabela completa dos 24 caracteres gráficos e blocos do ZX-81 com seus respectivos glifos, código de escape do ZXText2P e descrição. Navegue com as setas e tecle `Enter` para inserir o código correspondente diretamente na posição do cursor.
+  * **Compilação e Geração Direta de Binário `.P` (`F9` ou `Ctrl+B`):** Compila o código fonte em edição diretamente para o formato binário `.P` do Sinclair ZX-81. Em caso de sucesso, grava o arquivo `.P` e exibe relatório de tamanho e linhas. Em caso de erro de sintaxe, exibe diagnóstico com a linha do erro e move o cursor automaticamente para a posição da falha.
+  * **Parâmetros de Compilação (`F7` ou `Ctrl+T`):** Configuração interativa do modo de labels (`-l`), linha inicial (`-s`) e incremento (`-i`), persistida no banco SQLite `zx81ide.db`.
+* **Atalhos e Comandos do Editor:**
+  * `F1`: Exibe a tela de ajuda com todos os atalhos e recursos.
+  * `F2` ou `Ctrl+S`: Salva o arquivo ASCII (`.BAS`) no disco.
+  * `F4` ou `Ctrl+G`: Abre o Seletor de Caracteres Gráficos do ZX-81.
   * `F5`: Alterna entre janela normal e tela cheia (Zoom).
+  * `F7` ou `Ctrl+T`: Abre o diálogo de Parâmetros do Compilador ZXText2P.
+  * `F9` ou `Ctrl+B`: Compila e gera o arquivo binário `.P` do ZX-81.
   * `Esc`, `Alt+X` ou `Ctrl+Q`: Sai do editor (se houver alterações, exibe diálogo modal com opções `[ Sim ]`, `[ Não ]` e `[ Cancelar ]`).
   * `Setas`: Navegação do cursor em 4 direções.
   * `Home` / `End`: Início e fim da linha.

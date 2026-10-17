@@ -1,6 +1,7 @@
 #include "ui_tui/tui_app.h"
 #include "core/version.h"
 #include "core/config_manager.h"
+#include "editor/text_editor.h"
 
 #include <iostream>
 #include <string>
@@ -407,6 +408,7 @@ int run_tui() {
 
     bool running = true;
     int current_menu = 0; // 0: Arquivo, 1: Help
+    int menu_item_idx = 0; // Item selecionado no dropdown
     bool menu_open = false;
     bool show_about = false;
 
@@ -465,7 +467,7 @@ int run_tui() {
             screen.put_cell(x, status_y, " ", theme.status_fg, theme.status_bg);
         }
 
-        std::string shortcuts = " F10:Menu | T:Tema | Setas:Navegar | Enter:Selecionar | Esc:Fechar/Sair ";
+        std::string shortcuts = " F10:Menu | F3/E:Editor | T:Tema | Setas:Navegar | Enter:Selecionar | Esc:Fechar/Sair ";
         screen.put_string(1, status_y, shortcuts, theme.status_fg, theme.status_bg);
 
         std::string version_tag = "| Tema: " + theme.name + " | v" + get_version_string();
@@ -482,24 +484,31 @@ int run_tui() {
             int inner_w = drop_w - 2; // 20 colunas internas
 
             if (current_menu == 0) {
-                // Dropdown Arquivo -> [ Sair ]
+                // Dropdown Arquivo -> [ Editor Livre, Sair ]
                 int drop_x = pos_arquivo;
                 int drop_y = 1;
 
-                // Caixa com borda simples UTF-8
                 screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", inner_w) + "┐", theme.drop_border_fg, theme.drop_border_bg);
                 screen.put_string(drop_x, drop_y + 1, "│" + std::string(inner_w, ' ')  + "│", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", inner_w) + "┘", theme.drop_border_fg, theme.drop_border_bg);
+                screen.put_string(drop_x, drop_y + 2, "│" + std::string(inner_w, ' ')  + "│", theme.drop_border_fg, theme.drop_border_bg);
+                screen.put_string(drop_x, drop_y + 3, "└" + repeat_utf8("─", inner_w) + "┘", theme.drop_border_fg, theme.drop_border_bg);
 
-                // Item Sair selecionado
+                std::string item_edit = format_menu_item("Editor", "F3", inner_w);
                 std::string item_sair = format_menu_item("Sair", "Alt+X", inner_w);
-                screen.put_string(drop_x + 1, drop_y + 1, item_sair, theme.drop_sel_fg, theme.drop_sel_bg);
+
+                screen.put_string(drop_x + 1, drop_y + 1, item_edit,
+                    (menu_item_idx == 0 ? theme.drop_sel_fg : theme.drop_item_fg),
+                    (menu_item_idx == 0 ? theme.drop_sel_bg : theme.drop_item_bg));
+                screen.put_string(drop_x + 1, drop_y + 2, item_sair,
+                    (menu_item_idx == 1 ? theme.drop_sel_fg : theme.drop_item_fg),
+                    (menu_item_idx == 1 ? theme.drop_sel_bg : theme.drop_item_bg));
 
                 // Sombra MS-DOS (drop shadow)
                 screen.put_cell(drop_x + drop_w, drop_y + 1, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
                 screen.put_cell(drop_x + drop_w, drop_y + 2, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
+                screen.put_cell(drop_x + drop_w, drop_y + 3, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
                 for (int sx = 1; sx <= drop_w; ++sx) {
-                    screen.put_cell(drop_x + sx, drop_y + 3, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
+                    screen.put_cell(drop_x + sx, drop_y + 4, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
                 }
             } else if (current_menu == 1) {
                 // Dropdown Help -> [ About ]
@@ -588,18 +597,29 @@ int run_tui() {
             if (ext == 75) { // Seta Esquerda
                 if (!show_about) {
                     current_menu = (current_menu == 0) ? 1 : 0;
+                    menu_item_idx = 0;
                 }
             } else if (ext == 77) { // Seta Direita
                 if (!show_about) {
                     current_menu = (current_menu == 0) ? 1 : 0;
+                    menu_item_idx = 0;
                 }
             } else if (ext == 80) { // Seta Abaixo
                 if (!show_about) {
-                    menu_open = true;
+                    if (menu_open && current_menu == 0) {
+                        menu_item_idx = (menu_item_idx + 1) % 2;
+                    } else {
+                        menu_open = true;
+                        menu_item_idx = 0;
+                    }
                 }
             } else if (ext == 72) { // Seta Acima
                 if (!show_about && menu_open) {
-                    menu_open = false;
+                    if (current_menu == 0 && menu_item_idx > 0) {
+                        menu_item_idx--;
+                    } else {
+                        menu_open = false;
+                    }
                 }
             } else if (ext == 59) { // F1: About
                 show_about = true;
@@ -614,8 +634,13 @@ int run_tui() {
                 core::ConfigManager::instance().set_theme(next_theme);
                 current_theme_name = next_theme;
                 theme = get_tui_theme(current_theme_name);
+            } else if (ext == 61) { // F3: Editor Livre
+                menu_open = false;
+                zx81ide::editor::run_text_editor("NONAME.BAS");
+                setup_console();
             } else if (ext == 68) { // F10: Menu
                 menu_open = !menu_open;
+                menu_item_idx = 0;
             }
         } else {
             if (ch == 27) { // ESC
@@ -632,16 +657,29 @@ int run_tui() {
                     show_about = false;
                 } else if (!menu_open) {
                     menu_open = true;
+                    menu_item_idx = 0;
                 } else {
                     if (current_menu == 0) {
-                        // Arquivo -> Sair
-                        running = false;
+                        if (menu_item_idx == 0) {
+                            // Arquivo -> Editor Livre
+                            menu_open = false;
+                            zx81ide::editor::run_text_editor("NONAME.BAS");
+                            setup_console();
+                        } else if (menu_item_idx == 1) {
+                            // Arquivo -> Sair
+                            running = false;
+                        }
                     } else if (current_menu == 1) {
                         // Help -> About
                         show_about = true;
                         menu_open = false;
                     }
                 }
+            } else if (ch == 'e' || ch == 'E') {
+                // Abrir Editor de Texto direto pela tecla E
+                menu_open = false;
+                zx81ide::editor::run_text_editor("NONAME.BAS");
+                setup_console();
             } else if (ch == 't' || ch == 'T') {
                 // Alternar tema diretamente com a tecla T
                 std::string next_theme = "normal";
@@ -656,9 +694,11 @@ int run_tui() {
             } else if (ch == 'a' || ch == 'A') {
                 current_menu = 0;
                 menu_open = true;
+                menu_item_idx = 0;
             } else if (ch == 'h' || ch == 'H') {
                 current_menu = 1;
                 menu_open = true;
+                menu_item_idx = 0;
             } else if (ch == 's' || ch == 'S') {
                 if (menu_open && current_menu == 0) {
                     running = false;

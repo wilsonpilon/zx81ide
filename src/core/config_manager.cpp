@@ -234,5 +234,43 @@ bool ConfigManager::prompt_theme_selection_if_needed() {
     return true;
 }
 
+bool ConfigManager::get_compiler_labels_mode() {
+    std::string v = get("compiler.labels_mode", "false");
+    std::transform(v.begin(), v.end(), v.begin(), ::tolower);
+    return (v == "true" || v == "1" || v == "yes" || v == "sim");
+}
+
+bool ConfigManager::set_compiler_labels_mode(bool enabled) {
+    return set("compiler.labels_mode", enabled ? "true" : "false");
+}
+
+int ConfigManager::get_compiler_start_line() {
+    std::string v = get("compiler.start_line", "10");
+    try {
+        int n = std::stoi(v);
+        if (n >= 0 && n <= 9999) return n;
+    } catch (...) {}
+    return 10;
+}
+
+bool ConfigManager::set_compiler_start_line(int line) {
+    if (line < 0 || line > 9999) return false;
+    return set("compiler.start_line", std::to_string(line));
+}
+
+int ConfigManager::get_compiler_line_increment() {
+    std::string v = get("compiler.line_increment", "2");
+    try {
+        int n = std::stoi(v);
+        if (n >= 1 && n <= 9990) return n;
+    } catch (...) {}
+    return 2;
+}
+
+bool ConfigManager::set_compiler_line_increment(int inc) {
+    if (inc < 1 || inc > 9990) return false;
+    return set("compiler.line_increment", std::to_string(inc));
+}
+
 } // namespace core
 } // namespace zx81ide
