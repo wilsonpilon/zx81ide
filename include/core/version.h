@@ -7,7 +7,7 @@ namespace zx81ide {
 
 constexpr int VERSION_MAJOR = 0;
 constexpr int VERSION_MINOR = 1;
-constexpr int VERSION_PATCH = 6;
+constexpr int VERSION_PATCH = 7;
 
 // X: Nomes e modelos importantes de ZX-81 e clones
 inline const std::string VERSION_MAJOR_NAME = "Sinclair ZX81 (Foundation)";
@@ -16,7 +16,7 @@ inline const std::string VERSION_MAJOR_NAME = "Sinclair ZX81 (Foundation)";
 inline const std::string VERSION_GAME_CODENAME = "3D Monster Maze";
 
 // Z: Subtítulo curto indicando o que foi alterado
-inline const std::string VERSION_BUILD_SUBTITLE = "Implementacao visual do tema invertido no modo TUI";
+inline const std::string VERSION_BUILD_SUBTITLE = "Implementacao visual dos temas escuro e claro no modo TUI";
 
 inline std::string get_version_string() {
     return std::to_string(VERSION_MAJOR) + "." +

@@ -9,6 +9,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.7] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Implementacao visual dos temas escuro e claro no modo TUI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Implementação Visual Completa do Tema Escuro:**
+  * **Desktop:** Textura ASCII (`░`) em cinza escuro (`FG_GRAY_DARK`) sobre fundo preto puro (`BG_BLACK`), garantindo contraste imersivo.
+  * **Barra de Menus e Submenus Dropdown:** Fundo preto (`BG_BLACK`) com textos e bordas em branco puro (`FG_WHITE`).
+  * **Destaques e Seleção:** Itens ativos na barra de menus e submenus suspensos com fundo branco puro (`BG_WHITE`) e letras em preto (`FG_BLACK`).
+  * **Barra de Status:** Fundo preto (`BG_BLACK`) com texto em branco puro (`FG_WHITE`).
+  * **Diálogo Modal Sobre (About):** Janela com bordas e corpo em preto, título e botão `[ OK ]` destacados em branco com texto preto.
+* **Implementação Visual Completa do Tema Claro:**
+  * **Desktop:** Textura ASCII (`░`) com letras em cinza escuro (`FG_GRAY_DARK`) e fundo cinza claro (`BG_GRAY_LIGHT`), produzindo uma tonalidade cinza contínua.
+  * **Barra de Menus e Submenus Dropdown:** Fundo branco puro (`BG_WHITE`) com textos e bordas em preto (`FG_BLACK`).
+  * **Destaques e Seleção:** Itens ativos na barra de menus e submenus com fundo cinza escuro (`BG_GRAY_DARK`) e letras em branco (`FG_WHITE`).
+  * **Barra de Status:** Fundo branco puro (`BG_WHITE`) com texto em preto (`FG_BLACK`).
+  * **Diálogo Modal Sobre (About):** Janela com corpo branco e moldura dupla preta, com destaque de título e botão em cinza escuro com texto branco.
+
+---
+
 ## [0.1.6] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Implementacao visual do tema invertido no modo TUI"

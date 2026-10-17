@@ -4,6 +4,40 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.7] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.7 [3D Monster Maze] - Implementacao visual dos temas escuro e claro no modo TUI`
+
+* **Versão:** `0.1.7`
+* **Tag Git:** `v0.1.7`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Implementacao visual dos temas escuro e claro no modo TUI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.7.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.7** conclui o conjunto visual dos 4 temas do **zx81ide** no modo TUI, trazendo a implementação visual estrita dos temas **Escuro** e **Claro**. O sistema mantém a fidelidade estética ao universo do Sinclair ZX-81 utilizando exclusivamente variações de **Preto**, **Branco** e **Cinza**, com contrastes calibrados para legibilidade e ergonomia visual.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Tema Escuro (`escuro`):**
+  * **Desktop:** Textura ASCII (`░`) em cinza escuro (`FG_GRAY_DARK`) sobre fundo preto puro (`BG_BLACK`), oferecendo visual escuro elegante.
+  * **Barra de Menus e Dropdowns:** Fundo preto (`BG_BLACK`) com textos e molduras em branco puro (`FG_WHITE`).
+  * **Destaques e Seleção:** Menus ativos e opções de submenus com fundo branco puro (`BG_WHITE`) e letras em preto (`FG_BLACK`).
+  * **Barra de Status:** Fundo preto (`BG_BLACK`) com letras em branco puro (`FG_WHITE`).
+  * **Diálogo Modal Sobre (About):** Janela com bordas e corpo em preto, título e botão `[ OK ]` com destaque em branco e letras pretas.
+* **Tema Claro (`claro`):**
+  * **Desktop:** Textura ASCII (`░`) em cinza escuro (`FG_GRAY_DARK`) sobre fundo cinza claro (`BG_GRAY_LIGHT`), gerando uma superfície cinza contínua e suave.
+  * **Barra de Menus e Dropdowns:** Fundo branco puro (`BG_WHITE`) com textos e molduras em preto (`FG_BLACK`).
+  * **Destaques e Seleção:** Menus ativos e opções selecionadas com fundo cinza escuro (`BG_GRAY_DARK`) e letras em branco puro (`FG_WHITE`).
+  * **Barra de Status:** Fundo branco puro (`BG_WHITE`) com letras em preto (`FG_BLACK`).
+  * **Diálogo Modal Sobre (About):** Janela com corpo branco puro, moldura dupla em preto e destaque de título e botão em cinza escuro com texto branco.
+* **Pacote de Distribuição:** Binário compilado e pacote compactado `zx81ide-v-0.1.7.zip`.
+
+---
+
 ## [v0.1.6] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.6 [3D Monster Maze] - Implementacao visual do tema invertido no modo TUI`
 

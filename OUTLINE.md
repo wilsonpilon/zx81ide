@@ -118,6 +118,19 @@
   5. Atualização dos documentos vivos (`CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`).
   6. Compilação, testes funcionais e geração do pacote de distribuição `zx81ide-v-0.1.6.zip`.
 
+### Sessão 08 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Implementação visual das especificações dos temas escuro e claro:
+    * **Tema Escuro:** Desktop com cores preta e cinza escuro, barra de menus em preto com letras brancas, destaques em branco com letras pretas, barra de status com fundo preto e letras brancas.
+    * **Tema Claro:** Desktop com letra e fundo cinzas, barra de status com fundo branco e letras pretas, barra de menus com fundo branco e letras pretas, destaques com fundo cinza e letras brancas.
+* **Ações Executadas:**
+  1. Atualização do método `get_tui_theme()` em `src/ui_tui/tui_app.cpp` calibrando os contrastes para os temas `escuro` e `claro`, cobrindo desktop, menus, dropdowns, barra de status e diálogos modais.
+  2. Incremento de versão para `v0.1.7` (`Implementacao visual dos temas escuro e claro no modo TUI`).
+  3. Atualização dos documentos vivos (`include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`).
+  4. Compilação limpa via `build.ps1 -Clean`, testes funcionais e geração do pacote `zx81ide-v-0.1.7.zip`.
+  5. Commit, tag e publicação do release no GitHub via `gh release create`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

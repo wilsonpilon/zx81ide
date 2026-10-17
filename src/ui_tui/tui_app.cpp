@@ -130,45 +130,59 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
         th.dlg_shadow_fg   = Colors::FG_BLACK;
         th.dlg_shadow_bg   = Colors::BG_GRAY_DARK;
     } else if (name == "escuro") {
+        // =============================================================
+        // TEMA ESCURO SINCLAIR ZX-81:
+        // - Desktop com cores preta e cinza
+        // - Barra de menus com fundo preto e letras em branco
+        // - Destaques / selecao em branco com letras em preto
+        // - Barra de status com fundo preto e letras em branco
+        // =============================================================
         th.desktop_char    = "░";
         th.desktop_fg      = Colors::FG_GRAY_DARK;
         th.desktop_bg      = Colors::BG_BLACK;
 
-        th.menu_bar_fg     = Colors::FG_GRAY_LIGHT;
+        th.menu_bar_fg     = Colors::FG_WHITE;
         th.menu_bar_bg     = Colors::BG_BLACK;
         th.menu_active_fg  = Colors::FG_BLACK;
-        th.menu_active_bg  = Colors::BG_GRAY_LIGHT;
+        th.menu_active_bg  = Colors::BG_WHITE;
 
-        th.drop_border_fg  = Colors::FG_GRAY_LIGHT;
+        th.drop_border_fg  = Colors::FG_WHITE;
         th.drop_border_bg  = Colors::BG_BLACK;
-        th.drop_item_fg    = Colors::FG_GRAY_LIGHT;
+        th.drop_item_fg    = Colors::FG_WHITE;
         th.drop_item_bg    = Colors::BG_BLACK;
         th.drop_sel_fg     = Colors::FG_BLACK;
-        th.drop_sel_bg     = Colors::BG_GRAY_LIGHT;
+        th.drop_sel_bg     = Colors::BG_WHITE;
         th.drop_shadow_fg  = Colors::FG_GRAY_DARK;
         th.drop_shadow_bg  = Colors::BG_BLACK;
 
-        th.status_fg       = Colors::FG_GRAY_LIGHT;
+        th.status_fg       = Colors::FG_WHITE;
         th.status_bg       = Colors::BG_BLACK;
 
-        th.dlg_border_fg   = Colors::FG_GRAY_LIGHT;
+        th.dlg_border_fg   = Colors::FG_WHITE;
         th.dlg_border_bg   = Colors::BG_BLACK;
         th.dlg_body_bg     = Colors::BG_BLACK;
         th.dlg_title_fg    = Colors::FG_BLACK;
-        th.dlg_title_bg    = Colors::BG_GRAY_LIGHT;
+        th.dlg_title_bg    = Colors::BG_WHITE;
         th.dlg_text_fg     = Colors::FG_WHITE;
         th.dlg_text_dim    = Colors::FG_GRAY_DARK;
         th.dlg_btn_fg      = Colors::FG_BLACK;
-        th.dlg_btn_bg      = Colors::BG_GRAY_LIGHT;
+        th.dlg_btn_bg      = Colors::BG_WHITE;
         th.dlg_shadow_fg   = Colors::FG_GRAY_DARK;
         th.dlg_shadow_bg   = Colors::BG_BLACK;
     } else if (name == "claro") {
+        // =============================================================
+        // TEMA CLARO SINCLAIR ZX-81:
+        // - Desktop com letra e fundo cinzas
+        // - Barra de status com fundo branco e letras pretas
+        // - Barra de menus com fundo branco e letras pretas
+        // - Destaques / selecao com fundo cinza e letras brancas
+        // =============================================================
         th.desktop_char    = "░";
-        th.desktop_fg      = Colors::FG_GRAY_LIGHT;
-        th.desktop_bg      = Colors::BG_WHITE;
+        th.desktop_fg      = Colors::FG_GRAY_DARK;
+        th.desktop_bg      = Colors::BG_GRAY_LIGHT;
 
         th.menu_bar_fg     = Colors::FG_BLACK;
-        th.menu_bar_bg     = Colors::BG_GRAY_LIGHT;
+        th.menu_bar_bg     = Colors::BG_WHITE;
         th.menu_active_fg  = Colors::FG_WHITE;
         th.menu_active_bg  = Colors::BG_GRAY_DARK;
 
@@ -177,22 +191,22 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
         th.drop_item_fg    = Colors::FG_BLACK;
         th.drop_item_bg    = Colors::BG_WHITE;
         th.drop_sel_fg     = Colors::FG_WHITE;
-        th.drop_sel_bg     = Colors::BG_BLACK;
+        th.drop_sel_bg     = Colors::BG_GRAY_DARK;
         th.drop_shadow_fg  = Colors::FG_GRAY_DARK;
         th.drop_shadow_bg  = Colors::BG_GRAY_LIGHT;
 
         th.status_fg       = Colors::FG_BLACK;
-        th.status_bg       = Colors::BG_GRAY_LIGHT;
+        th.status_bg       = Colors::BG_WHITE;
 
         th.dlg_border_fg   = Colors::FG_BLACK;
         th.dlg_border_bg   = Colors::BG_WHITE;
         th.dlg_body_bg     = Colors::BG_WHITE;
         th.dlg_title_fg    = Colors::FG_WHITE;
-        th.dlg_title_bg    = Colors::BG_BLACK;
+        th.dlg_title_bg    = Colors::BG_GRAY_DARK;
         th.dlg_text_fg     = Colors::FG_BLACK;
         th.dlg_text_dim    = Colors::FG_GRAY_DARK;
         th.dlg_btn_fg      = Colors::FG_WHITE;
-        th.dlg_btn_bg      = Colors::BG_BLACK;
+        th.dlg_btn_bg      = Colors::BG_GRAY_DARK;
         th.dlg_shadow_fg   = Colors::FG_GRAY_DARK;
         th.dlg_shadow_bg   = Colors::BG_GRAY_LIGHT;
     } else {

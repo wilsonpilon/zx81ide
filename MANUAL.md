@@ -140,7 +140,7 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
   * `Arquivo` -> `Sair (Alt+X)`
   * `Help` -> `About... (F1)`
 * **Desktop:** Área central com padrão quadriculado ASCII em cinza e branco (`░░▒▒`).
-* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: invertido | v0.1.6`).
+* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: escuro | v0.1.7`).
 * **Atalhos do Teclado:**
   * `Setas Esquerda / Direita`: Alterna entre os menus `Arquivo` e `Help`.
   * `Seta Abaixo / Enter`: Abre o submenu suspenso ou ativa o item selecionado.
@@ -153,10 +153,10 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
 ### 5.4. Gestão de Configurações e Temas (SQLite)
 O **zx81ide** utiliza o **SQLite 3** como motor para armazenamento de parâmetros e preferências da aplicação no arquivo `zx81ide.db`:
 * **Primeira Execução:** Se nenhum tema estiver configurado, o sistema abre um diálogo interativo solicitando a seleção:
-  * `[1] normal`: Sinclair ZX-81 padrão (texto branco/cinza em fundo preto, status cinza com texto preto).
-  * `[2] invertido`: Sinclair invertido (menus com fundo cinza e letras pretas; destaques/seleção com fundo preto e letras brancas; desktop com cores invertidas do normal; barra de status com fundo preto e letras brancas).
-  * `[3] claro`: Tema claro.
-  * `[4] escuro`: Tema escuro.
+  * `[1] normal`: Sinclair ZX-81 padrão (desktop com quadriculado cinza em fundo preto; barra de menus preta com texto branco; destaques em branco com texto preto; barra de status cinza claro com texto preto).
+  * `[2] invertido`: Sinclair invertido (menus com fundo cinza e letras pretas; destaques/seleção com fundo preto e letras brancas; desktop invertendo as cores do normal: caracteres pretos em fundo cinza escuro; barra de status com fundo preto e letras brancas).
+  * `[3] escuro`: Tema escuro (desktop em preto e cinza escuro; barra de menus com fundo preto e letras brancas; destaques em branco com letras pretas; barra de status com fundo preto e letras brancas).
+  * `[4] claro`: Tema claro (desktop com letra e fundo cinzas; barra de status com fundo branco e letras pretas; barra de menus com fundo branco e letras pretas; destaques com fundo cinza e letras brancas).
 * **Comandos de Tema no Console CLI:**
   * `theme`: Exibe o tema atualmente ativo e a lista de temas suportados.
   * `theme <normal|invertido|claro|escuro>`: Altera instantaneamente o tema no banco SQLite.
