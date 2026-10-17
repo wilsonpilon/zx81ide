@@ -393,6 +393,8 @@ void handle_project_command(const std::vector<std::string>& tokens) {
     }
 }
 
+} // anonymous namespace
+
 void handle_compile_chars_command() {
     const auto& table = compiler::ZXText2P::get_graphics_table();
     std::cout << "\n=== Caracteres Graficos e Escapes ZXText2P do Sinclair ZX-81 ===\n";
@@ -449,9 +451,9 @@ void handle_compile_command(const std::vector<std::string>& tokens) {
         out_file = in_file;
         size_t dot = out_file.find_last_of('.');
         if (dot != std::string::npos) {
-            out_file = out_file.substr(0, dot) + ".p";
+            out_file = out_file.substr(0, dot) + ".P";
         } else {
-            out_file += ".p";
+            out_file += ".P";
         }
     }
 
@@ -480,8 +482,6 @@ void handle_compile_command(const std::vector<std::string>& tokens) {
         }
     }
 }
-
-} // anonymous namespace
 
 int run_interactive_cli() {
     // 1. Inicializar banco de configuracoes SQLite

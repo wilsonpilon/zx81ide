@@ -14,12 +14,14 @@ enum class AppMode {
     TUI,
     GUI,
     PROJECT_INFO,
-    EDITOR
+    EDITOR,
+    COMPILE
 };
 
 struct CliOptions {
     AppMode mode = AppMode::CLI_INTERACTIVE;
     std::string source_file;
+    std::vector<std::string> compile_tokens;
     std::string project_file;
     std::string theme_override;
     std::string config_db_path;

@@ -155,9 +155,11 @@ O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo
 * **Início Rápido:**
   * No console CLI interativo: `editor <arquivo.bas>` (ex: `editor main.bas`).
   * Na linha de comando do sistema: `zx81ide editor <arquivo.bas>` ou `zx81ide <arquivo.bas>`.
+  * Compilação direta via terminal do SO: `zx81ide compile <arquivo.bas> [-o <saida.p>]`.
 * **Características da Janela:**
+  * **Barra de Menus Superior Persistente (Linha 0):** A barra de menus principal (`Arquivo`, `Editar`, `Compilar`, `Opções`, `Ajuda`) permanece permanentemente visível e ativa na Linha 0 em todos os modos e tamanhos de janela, com menus dropdown em cascata contendo sombra pontilhada MS-DOS (`▒`), navegação por teclado (`F10`, `Alt+A/E/C/O/H`, setas direcionais, `Enter`) e suporte integral a mouse.
   * **Moldura Dupla IBM-PC:** Caracteres `╔`, `═`, `╗`, `║`, `╚`, `╝` e alça triangular `◢`.
-  * **Área Útil Inicial:** 80 colunas por 25 linhas de escrita (área total da janela 82x27 perfeitamente alinhada).
+  * **Área Útil Inicial:** 80 colunas por 25 linhas de escrita (área total da janela 82x27 perfeitamente alinhada entre as Linhas 1 e `term_h - 2`).
   * **Botão Fechar (`[×]`):** Localizado no canto superior esquerdo da moldura, fechando o editor ao ser clicado pelo mouse.
   * **Título do Arquivo:** Exibe o nome do arquivo centralizado na barra superior com indicador de modificação (`*`).
   * **Botão Maximizar/Restaurar (`[▲]` e `[↕]`):** Alterna entre janela restaurada e tela cheia (Zoom), acionável por clique ou pela tecla `F5`.
@@ -166,7 +168,7 @@ O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo
   * **Movimentação da Janela:** Clique e arrasto na barra de título permite mover a janela sobre o desktop.
   * **Destaque de Sintaxe ZX-81 (Syntax Highlighting):** Realce automático em tempo real para palavras-chave (PRINT, FOR, NEXT, IF, etc. em alto contraste/negrito), números e linhas, strings entre aspas, comentários `#` e comandos `REM`, definições/chamadas de labels (`@loop`), e caracteres gráficos/escapes do ZX-81 (`\:'`, `\::`, `%X`).
   * **Seletor de Caracteres Gráficos e de Bloco (`F4` ou `Ctrl+G`):** Abre uma janela modal exibindo a tabela completa dos 24 caracteres gráficos e blocos do ZX-81 com seus respectivos glifos, código de escape do ZXText2P e descrição. Navegue com as setas e tecle `Enter` para inserir o código correspondente diretamente na posição do cursor.
-  * **Compilação e Geração Direta de Binário `.P` (`F9` ou `Ctrl+B`):** Compila o código fonte em edição diretamente para o formato binário `.P` do Sinclair ZX-81. Em caso de sucesso, grava o arquivo `.P` e exibe relatório de tamanho e linhas. Em caso de erro de sintaxe, exibe diagnóstico com a linha do erro e move o cursor automaticamente para a posição da falha.
+  * **Compilação e Geração Direta de Binário `.P` (`F9` ou `Ctrl+B`):** Compila o código fonte em edição diretamente para o formato binário `.P` do Sinclair ZX-81 com suporte automático a linhas sem numeração ou com labels. Em caso de sucesso, grava o arquivo `.P` e exibe relatório de tamanho e linhas em modal estável. Em caso de erro de sintaxe, exibe diagnóstico com a linha do erro e move o cursor automaticamente para a posição da falha.
   * **Parâmetros de Compilação (`F7` ou `Ctrl+T`):** Configuração interativa do modo de labels (`-l`), linha inicial (`-s`) e incremento (`-i`), persistida no banco SQLite `zx81ide.db`.
 * **Atalhos e Comandos do Editor:**
   * `F1`: Exibe a tela de ajuda com todos os atalhos e recursos.
@@ -175,6 +177,7 @@ O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo
   * `F5`: Alterna entre janela normal e tela cheia (Zoom).
   * `F7` ou `Ctrl+T`: Abre o diálogo de Parâmetros do Compilador ZXText2P.
   * `F9` ou `Ctrl+B`: Compila e gera o arquivo binário `.P` do ZX-81.
+  * `F10` ou `Alt+M`: Ativa a Barra de Menus superior (navegue com setas ou atalhos `Alt+A`, `Alt+E`, `Alt+C`, `Alt+O`, `Alt+H`).
   * `Esc`, `Alt+X` ou `Ctrl+Q`: Sai do editor (se houver alterações, exibe diálogo modal com opções `[ Sim ]`, `[ Não ]` e `[ Cancelar ]`).
   * `Setas`: Navegação do cursor em 4 direções.
   * `Home` / `End`: Início e fim da linha.

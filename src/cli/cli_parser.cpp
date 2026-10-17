@@ -61,6 +61,17 @@ CliOptions parse_arguments(int argc, char* argv[]) {
                 options.error_message = "Opcao '--project' requer o caminho do arquivo .zx81project.";
                 return options;
             }
+        } else if (arg == "compile" || arg == "--compile") {
+            options.mode = AppMode::COMPILE;
+            options.compile_tokens.push_back("compile");
+            while (i + 1 < argc) {
+                options.compile_tokens.push_back(argv[++i]);
+            }
+            return options;
+        } else if (arg == "compile-chars" || arg == "--compile-chars") {
+            options.mode = AppMode::COMPILE;
+            options.compile_tokens.push_back("compile-chars");
+            return options;
         } else if (!arg.empty() && arg[0] == '-') {
             options.has_error = true;
             options.error_message = "Opcao desconhecida: " + arg + "\nUse 'zx81ide --help' para ver as opcoes validas.";
@@ -89,6 +100,8 @@ void print_help() {
     std::cout << "Uso:\n";
     std::cout << "  zx81ide                             Inicia no modo interativo CLI (padrao)\n";
     std::cout << "  zx81ide editor <arquivo.bas>        Abre o editor de texto Turbo C++ no console\n";
+    std::cout << "  zx81ide compile <arquivo.bas>       Compila diretamente BASIC para binario .P\n";
+    std::cout << "  zx81ide compile-chars               Lista os codigos de escape e caracteres graficos ZX-81\n";
     std::cout << "  zx81ide <arquivo.bas>               Abre diretamente o arquivo no editor de texto\n";
     std::cout << "  zx81ide <projeto.zx81project>       Inspeciona resumo de um projeto\n";
     std::cout << "  zx81ide [opcoes]                    Executa opcao ou modo especifico\n\n";

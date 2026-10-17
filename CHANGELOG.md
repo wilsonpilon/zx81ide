@@ -9,6 +9,26 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.11] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* **Barra Superior de Menus Persistente no Editor (`src/editor/text_editor.cpp`):**
+  * A barra de menus principal (`Arquivo`, `Editar`, `Compilar`, `Opcoes`, `Ajuda`) agora permanece visível e permanentemente ativa na Linha 0 da tela durante toda a execução do editor, tanto na TUI integrada quanto no modo CLI avulso (`zx81ide editor <arquivo>`).
+  * A área útil de edição e borda da janela foi delimitada entre a Linha 1 e `term_h - 2`, preservando a Linha 0 para os menus e a Linha `term_h - 1` para a barra de status e atalhos rápidos.
+  * Menus suspensos (dropdowns) com bordas `┌─┐│└─┘` e sombras de bloco pontilhado estilo MS-DOS (`▒`), com suporte a teclado (`F10`, `Alt+A/E/C/O/H`, setas direcionais, `Enter`) e clique de mouse.
+* **Correção do Atalho de Compilação `F9` e Feedback de Modais:**
+  * Corrigido encerramento prematuro e invisível dos modais de sucesso e erro: substituída a instrução `continue` por `break` no loop de eventos do console (`ReadConsoleInputW`), impedindo que eventos em lote fechem o modal antes da renderização do frame.
+  * O modal de compilação com sucesso (`╔═════════[ Compilacao Concluida (.P) ]═════════╗`) e o de erro agora são exibidos de forma estável na tela e aguardam confirmação explícita (`Enter`, `Esc`, `Espaço` ou clique de mouse).
+  * Auto-detecção de modo labels/não-numerado no compilador ZXText2P: códigos BASIC sem número de linha inicial ou misturando labels e números explícitos agora compilam com numeração automática em vez de falharem silenciosamente.
+  * Garantida a gravação do arquivo `.P` em maiúsculo (ex: `NONAME.P`) no disco para compatibilidade com emuladores (EightyOne) e gravadores de fita.
+* **Comando `compile` e `compile-chars` diretamente na Linha de Comando do Sistema Operacional:**
+  * O executável agora aceita `zx81ide compile <arquivo.bas> [-o <saida.p>]` diretamente no terminal sem abrir o editor ou requerer o prompt interativo.
+
+---
+
 ## [0.1.10] - 2026-10-17
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos"

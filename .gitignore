@@ -77,4 +77,5 @@ dist/
 *.db-wal
 *.db-shm
 *.zx81project
-
+*.p
+*.P

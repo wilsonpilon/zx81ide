@@ -283,19 +283,85 @@ CompilerResult ZXText2P::compile_source(const std::string& source_code, const Co
     }
 
     if (raw_lines.empty()) {
-        result.error_message = "O arquivo de codigo fonte esta vazio ou contem apenas comentarios.";
-        result.error_line = 1;
+        // Gera arquivo .P Sinclair ZX-81 valido vazio (sem linhas de programa)
+        std::vector<uint8_t> p_file(116, 0);
+        uint16_t d_file_addr = 0x4009 + 116; // 0x407D
+        p_file[3] = (uint8_t)(d_file_addr & 0xFF);
+        p_file[4] = (uint8_t)(d_file_addr >> 8);
+        uint16_t df_cc_addr = d_file_addr + 1;
+        p_file[5] = (uint8_t)(df_cc_addr & 0xFF);
+        p_file[6] = (uint8_t)(df_cc_addr >> 8);
+        uint16_t vars_addr = d_file_addr + 793;
+        p_file[7] = (uint8_t)(vars_addr & 0xFF);
+        p_file[8] = (uint8_t)(vars_addr >> 8);
+        uint16_t e_line_addr = vars_addr + 1;
+        p_file[11] = (uint8_t)(e_line_addr & 0xFF);
+        p_file[12] = (uint8_t)(e_line_addr >> 8);
+        uint16_t ch_add_addr = e_line_addr + 1;
+        p_file[13] = (uint8_t)(ch_add_addr & 0xFF);
+        p_file[14] = (uint8_t)(ch_add_addr >> 8);
+        uint16_t stk_addr = ch_add_addr + 1;
+        p_file[17] = p_file[19] = (uint8_t)(stk_addr & 0xFF);
+        p_file[18] = p_file[20] = (uint8_t)(stk_addr >> 8);
+        p_file[22] = 0x5D;
+        p_file[23] = 0x40;
+        p_file[25] = 2;
+        p_file[28] = p_file[29] = 255;
+        p_file[30] = 0x0F;
+        p_file[31] = 55;
+        p_file[32] = p_file[3];
+        p_file[33] = p_file[4];
+        p_file[39] = 0x6B;
+        p_file[40] = 0x0C;
+        p_file[43] = 0x7D;
+        p_file[44] = 0xFD;
+        p_file[47] = 0xBC;
+        p_file[48] = 0x21;
+        p_file[49] = 0x18;
+        p_file[50] = 0x40;
+        p_file[83] = 118;
+
+        // D_FILE: 1 byte 0x76, seguido de 24 linhas de (32 espacos 0x00 + 1 byte 0x76)
+        p_file.push_back(0x76);
+        for (int row = 0; row < 24; ++row) {
+            for (int col = 0; col < 32; ++col) {
+                p_file.push_back(0x00);
+            }
+            p_file.push_back(0x76);
+        }
+        // VARS: 0x80
+        p_file.push_back(0x80);
+
+        result.success = true;
+        result.total_lines = 0;
+        result.program_bytes = 0;
+        result.p_data = p_file;
+        result.total_p_bytes = p_file.size();
         return result;
     }
 
-    // 2. Modo Labels vs Modo Numerado
+    // 2. Modo Labels vs Modo Numerado (com auto-deteccao)
+    bool use_labels = options.use_labels;
+    if (options.auto_detect_mode && !use_labels) {
+        for (size_t i = 0; i < raw_lines.size(); ++i) {
+            const std::string& text = raw_lines[i].second;
+            size_t p = text.find_first_not_of(" \t");
+            if (p != std::string::npos) {
+                if (text[p] == '@' || !std::isdigit((unsigned char)text[p])) {
+                    use_labels = true;
+                    break;
+                }
+            }
+        }
+    }
+
     std::map<std::string, int> label_map;
     std::vector<int> assigned_line_numbers;
     assigned_line_numbers.resize(raw_lines.size(), 0);
 
     int first_line_num = -1;
 
-    if (options.use_labels) {
+    if (use_labels) {
         // Pass 1: Associar linhas e registrar labels
         int current_auto_line = options.start_line;
         for (size_t i = 0; i < raw_lines.size(); ++i) {
@@ -307,11 +373,24 @@ CompilerResult ZXText2P::compile_source(const std::string& source_code, const Co
             if (p == std::string::npos) p = 0;
             std::string statement = text.substr(p);
 
-            // Verifica se a linha comeca com numero (invalido no modo labels)
+            // Se a linha ja comeca com numero explicito (ex: 10 PRINT ...), respeita o numero!
             if (!statement.empty() && std::isdigit((unsigned char)statement[0])) {
-                result.error_message = "Numero de linha nao permitido no modo de labels (-l). Use '@label:'";
-                result.error_line = src_line;
-                return result;
+                size_t end_num = 0;
+                while (end_num < statement.size() && std::isdigit((unsigned char)statement[end_num])) {
+                    end_num++;
+                }
+                int explicit_line = std::stoi(statement.substr(0, end_num));
+                assigned_line_numbers[i] = explicit_line;
+                current_auto_line = explicit_line + options.line_increment;
+                if (first_line_num == -1) first_line_num = explicit_line;
+
+                size_t after_num = statement.find_first_not_of(" \t", end_num);
+                if (after_num != std::string::npos) {
+                    text = statement.substr(after_num);
+                } else {
+                    text = "";
+                }
+                continue;
             }
 
             // Se for definicao de label: @minhalabel:
@@ -424,7 +503,7 @@ CompilerResult ZXText2P::compile_source(const std::string& source_code, const Co
         }
 
         // Substituicao de labels @nome -> 100
-        if (options.use_labels) {
+        if (use_labels) {
             size_t at_pos = 0;
             while ((at_pos = line_text.find('@', at_pos)) != std::string::npos) {
                 if (at_pos > 0 && line_text[at_pos - 1] == '\\') {

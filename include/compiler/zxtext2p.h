@@ -10,10 +10,11 @@ namespace compiler {
 
 // Estrutura de opcoes de compilacao compativeis com ZXText2P
 struct CompilerOptions {
-    bool use_labels = false;      // Modo labels ao inves de numeros de linha (-l)
-    int start_line = 10;          // Linha inicial no modo labels (-s)
-    int line_increment = 2;       // Incremento de linha no modo labels (-i)
-    std::string output_file = ""; // Arquivo de saida (.p) opcional
+    bool use_labels = false;          // Modo labels ao inves de numeros de linha (-l)
+    bool auto_detect_mode = true;     // Detecta automaticamente linhas sem numero e labels
+    int start_line = 10;              // Linha inicial no modo labels (-s)
+    int line_increment = 10;          // Incremento de linha no modo labels (-i)
+    std::string output_file = "";     // Arquivo de saida (.p) opcional
 };
 
 // Estrutura de resultado da compilacao

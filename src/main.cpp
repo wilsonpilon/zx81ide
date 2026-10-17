@@ -82,6 +82,14 @@ int main(int argc, char* argv[]) {
             cfg.prompt_theme_selection_if_needed();
             return zx81ide::editor::run_text_editor(options.source_file.empty() ? "NONAME.BAS" : options.source_file);
 
+        case AppMode::COMPILE:
+            if (!options.compile_tokens.empty() && options.compile_tokens[0] == "compile-chars") {
+                zx81ide::cli::handle_compile_chars_command();
+            } else {
+                zx81ide::cli::handle_compile_command(options.compile_tokens);
+            }
+            return 0;
+
         case AppMode::CLI_INTERACTIVE:
         default:
             return run_interactive_cli();

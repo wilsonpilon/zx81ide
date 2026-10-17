@@ -200,6 +200,27 @@
   8. Build limpo via `build.ps1 -Clean`, geração do pacote de distribuição `zx81ide-v-0.1.10.zip`, commit, criação da tag Git `v0.1.10` e publicação no GitHub Releases.
 
 
+
+### Sessão 12 - 17/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * O menu superior sumia ao abrir o editor ("abrindo o editor o menu some, nao pode, devemos ter o menu").
+  * O atalho F9 não compilava, não dava indicativo de que ia compilar, não mostrava erros nem se gerava o resultado `.P`, e saindo do programa não foi encontrado o `NONAME.P` correspondente a `NONAME.BAS`.
+* **Ações Executadas:**
+  1. Menu Bar Superior Persistente no Editor:
+     * A barra de menus superior (`Arquivo`, `Editar`, `Compilar`, `Opcoes`, `Ajuda`) foi fixada permanentemente na Linha 0 em todos os estados de janela (flutuante ou maximizada).
+     * O editor foi delimitado para ocupar estritamente entre a Linha 1 e `term_h - 2`, preservando a Linha `term_h - 1` para a barra de status e atalhos rápidos.
+     * Implementados menus dropdown em cascata com bordas `┌─┐│└─┘` e sombra pontilhada MS-DOS (`▒`), com navegação por teclado (`F10`, `Alt+A/E/C/O/H`, setas direcionais, `Enter`) e clique de mouse.
+  2. Correção da Compilação `F9` e Modais de Feedback:
+     * Corrigido encerramento prematuro dos modais: substituído `continue` por `break` no loop de eventos do console (`ReadConsoleInputW`), garantindo que o modal seja desenhado na tela antes que eventos subsequentes possam fechá-lo.
+     * Os modais de sucesso e erro agora exigem confirmação explícita (`Enter`, `Esc`, `Espaço` ou clique de mouse).
+     * Auto-detecção no compilador ZXText2P: adicionado modo automático que detecta linhas não-numeradas e labels e aplica numeração incremental transparente, garantindo que arquivos como `NONAME.BAS` com comandos diretos compilem com sucesso.
+     * Padronização da extensão `.P` maiúscula no salvamento de snapshots binários.
+  3. Execução Direta via Linha de Comando:
+     * O executável agora aceita `zx81ide compile <arquivo.bas> [-o <saida.p>]` diretamente no terminal do SO sem abrir o editor de texto.
+  4. Incremento de versão para `v0.1.11` (`Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P`).
+  5. Atualização completa de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `MANUAL.md` e `OUTLINE.md`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

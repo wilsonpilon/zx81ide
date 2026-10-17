@@ -89,6 +89,22 @@ struct EditorTheme {
     std::string status_fg;
     std::string status_bg;
 
+    // Barra de Menus Superior (Linha 0)
+    std::string menu_bar_fg;
+    std::string menu_bar_bg;
+    std::string menu_active_fg;
+    std::string menu_active_bg;
+
+    // Submenu Dropdown (Bordas, interior e seleção)
+    std::string drop_border_fg;
+    std::string drop_border_bg;
+    std::string drop_item_fg;
+    std::string drop_item_bg;
+    std::string drop_sel_fg;
+    std::string drop_sel_bg;
+    std::string drop_shadow_fg;
+    std::string drop_shadow_bg;
+
     // Dialogo Salvar / Mensagens / Modais
     std::string dlg_border_fg;
     std::string dlg_border_bg;
@@ -145,6 +161,20 @@ EditorTheme get_editor_theme(const std::string& theme_name) {
         th.status_fg         = Colors::FG_WHITE;
         th.status_bg         = Colors::BG_BLACK;
 
+        th.menu_bar_fg       = Colors::FG_BLACK;
+        th.menu_bar_bg       = Colors::BG_GRAY_LIGHT;
+        th.menu_active_fg    = Colors::FG_WHITE;
+        th.menu_active_bg    = Colors::BG_BLACK;
+
+        th.drop_border_fg    = Colors::FG_BLACK;
+        th.drop_border_bg    = Colors::BG_GRAY_LIGHT;
+        th.drop_item_fg      = Colors::FG_BLACK;
+        th.drop_item_bg      = Colors::BG_GRAY_LIGHT;
+        th.drop_sel_fg       = Colors::FG_WHITE;
+        th.drop_sel_bg       = Colors::BG_BLACK;
+        th.drop_shadow_fg    = Colors::FG_BLACK;
+        th.drop_shadow_bg    = Colors::BG_GRAY_DARK;
+
         th.dlg_border_fg     = Colors::FG_BLACK;
         th.dlg_border_bg     = Colors::BG_GRAY_LIGHT;
         th.dlg_body_bg       = Colors::BG_GRAY_LIGHT;
@@ -193,6 +223,20 @@ EditorTheme get_editor_theme(const std::string& theme_name) {
         th.status_fg         = Colors::FG_WHITE;
         th.status_bg         = Colors::BG_BLACK;
 
+        th.menu_bar_fg       = Colors::FG_WHITE;
+        th.menu_bar_bg       = Colors::BG_BLACK;
+        th.menu_active_fg    = Colors::FG_BLACK;
+        th.menu_active_bg    = Colors::BG_WHITE;
+
+        th.drop_border_fg    = Colors::FG_WHITE;
+        th.drop_border_bg    = Colors::BG_BLACK;
+        th.drop_item_fg      = Colors::FG_WHITE;
+        th.drop_item_bg      = Colors::BG_BLACK;
+        th.drop_sel_fg       = Colors::FG_BLACK;
+        th.drop_sel_bg       = Colors::BG_WHITE;
+        th.drop_shadow_fg    = Colors::FG_GRAY_DARK;
+        th.drop_shadow_bg    = Colors::BG_BLACK;
+
         th.dlg_border_fg     = Colors::FG_WHITE;
         th.dlg_border_bg     = Colors::BG_BLACK;
         th.dlg_body_bg       = Colors::BG_BLACK;
@@ -240,6 +284,20 @@ EditorTheme get_editor_theme(const std::string& theme_name) {
 
         th.status_fg         = Colors::FG_BLACK;
         th.status_bg         = Colors::BG_WHITE;
+
+        th.menu_bar_fg       = Colors::FG_BLACK;
+        th.menu_bar_bg       = Colors::BG_WHITE;
+        th.menu_active_fg    = Colors::FG_WHITE;
+        th.menu_active_bg    = Colors::BG_GRAY_DARK;
+
+        th.drop_border_fg    = Colors::FG_BLACK;
+        th.drop_border_bg    = Colors::BG_WHITE;
+        th.drop_item_fg      = Colors::FG_BLACK;
+        th.drop_item_bg      = Colors::BG_WHITE;
+        th.drop_sel_fg       = Colors::FG_WHITE;
+        th.drop_sel_bg       = Colors::BG_GRAY_DARK;
+        th.drop_shadow_fg    = Colors::FG_GRAY_DARK;
+        th.drop_shadow_bg    = Colors::BG_GRAY_LIGHT;
 
         th.dlg_border_fg     = Colors::FG_BLACK;
         th.dlg_border_bg     = Colors::BG_WHITE;
@@ -290,6 +348,20 @@ EditorTheme get_editor_theme(const std::string& theme_name) {
         th.status_fg         = Colors::FG_BLACK;
         th.status_bg         = Colors::BG_GRAY_LIGHT;
 
+        th.menu_bar_fg       = Colors::FG_WHITE;
+        th.menu_bar_bg       = Colors::BG_BLACK;
+        th.menu_active_fg    = Colors::FG_BLACK;
+        th.menu_active_bg    = Colors::BG_WHITE;
+
+        th.drop_border_fg    = Colors::FG_WHITE;
+        th.drop_border_bg    = Colors::BG_BLACK;
+        th.drop_item_fg      = Colors::FG_WHITE;
+        th.drop_item_bg      = Colors::BG_BLACK;
+        th.drop_sel_fg       = Colors::FG_BLACK;
+        th.drop_sel_bg       = Colors::BG_WHITE;
+        th.drop_shadow_fg    = Colors::FG_GRAY_DARK;
+        th.drop_shadow_bg    = Colors::BG_BLACK;
+
         th.dlg_border_fg     = Colors::FG_WHITE;
         th.dlg_border_bg     = Colors::BG_BLACK;
         th.dlg_body_bg       = Colors::BG_BLACK;
@@ -301,6 +373,102 @@ EditorTheme get_editor_theme(const std::string& theme_name) {
     }
 
     return th;
+}
+
+std::string repeat_utf8(const std::string& ch, int count) {
+    std::string result;
+    result.reserve(ch.size() * count);
+    for (int i = 0; i < count; ++i) {
+        result += ch;
+    }
+    return result;
+}
+
+std::string format_menu_item(const std::string& label, const std::string& shortcut, int inner_width) {
+    std::string text = " " + label;
+    int spaces = inner_width - static_cast<int>(text.size()) - static_cast<int>(shortcut.size()) - 1;
+    if (spaces < 1) spaces = 1;
+    text += std::string(spaces, ' ') + shortcut + " ";
+    if (static_cast<int>(text.size()) > inner_width) {
+        text = text.substr(0, inner_width);
+    }
+    return text;
+}
+
+struct MenuItem {
+    std::string label;
+    std::string shortcut;
+    int id;
+};
+
+struct MenuDef {
+    std::string title;
+    int x_pos;
+    int width;
+    std::vector<MenuItem> items;
+};
+
+std::vector<MenuDef> build_editor_menus() {
+    std::vector<MenuDef> menus;
+    
+    // Arquivo
+    MenuDef m_file;
+    m_file.title = "Arquivo";
+    m_file.x_pos = 1;
+    m_file.width = 9;
+    m_file.items = {
+        { "Novo",              "Ctrl+N", 101 },
+        { "Salvar .BAS",       "F2",     102 },
+        { "Sair",              "Alt+X",  103 }
+    };
+    menus.push_back(m_file);
+
+    // Editar
+    MenuDef m_edit;
+    m_edit.title = "Editar";
+    m_edit.x_pos = 11;
+    m_edit.width = 8;
+    m_edit.items = {
+        { "Caracteres Graficos...", "F4", 201 }
+    };
+    menus.push_back(m_edit);
+
+    // Compilar
+    MenuDef m_comp;
+    m_comp.title = "Compilar";
+    m_comp.x_pos = 20;
+    m_comp.width = 10;
+    m_comp.items = {
+        { "Compilar para .P (ZX-81)", "F9", 301 },
+        { "Opcoes do Compilador...",  "F7", 302 }
+    };
+    menus.push_back(m_comp);
+
+    // Opcoes
+    MenuDef m_opt;
+    m_opt.title = "Opcoes";
+    m_opt.x_pos = 31;
+    m_opt.width = 8;
+    m_opt.items = {
+        { "Tema: Normal",    "1", 401 },
+        { "Tema: Invertido", "2", 402 },
+        { "Tema: Claro",     "3", 403 },
+        { "Tema: Escuro",    "4", 404 }
+    };
+    menus.push_back(m_opt);
+
+    // Ajuda
+    MenuDef m_help;
+    m_help.title = "Ajuda";
+    m_help.x_pos = 40;
+    m_help.width = 7;
+    m_help.items = {
+        { "Ajuda do Editor", "F1", 501 },
+        { "Sobre o zx81ide...", "", 502 }
+    };
+    menus.push_back(m_help);
+
+    return menus;
 }
 
 void get_terminal_size(int& width, int& height) {
@@ -620,10 +788,22 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     SetConsoleCP(CP_UTF8);
 #endif
 
-    std::string display_name = extract_file_name(file_path);
+    std::string current_file_path = file_path;
+    if (current_file_path.empty()) {
+        current_file_path = "NONAME.BAS";
+    }
+
+    std::string display_name = extract_file_name(current_file_path);
     if (display_name.empty()) {
         display_name = "NONAME.BAS";
     }
+
+    // Menus Superiores (Linha 0)
+    auto menus = build_editor_menus();
+    bool menu_active = false;
+    int active_menu_idx = 0;
+    int active_item_idx = 0;
+    bool show_about_modal = false;
 
     // Estado do Editor
     int cursor_row = 0;
@@ -636,19 +816,19 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     std::string status_msg = is_new_file ? "[ Novo Arquivo ]" : "[ Arquivo Carregado ]";
     auto status_msg_time = std::chrono::steady_clock::now();
 
-    // Dimensoes da janela (padrao inicial: 80x25 uteis para escrita + moldura = 82x27)
+    // Dimensoes da janela (padrao inicial: 80x23 uteis para escrita + moldura = 82x25)
     int term_w = 80;
     int term_h = 25;
     get_terminal_size(term_w, term_h);
 
     int win_w = 82;
-    int win_h = 27;
+    int win_h = 24;
 
     if (win_w > term_w) win_w = term_w;
-    if (win_h > term_h - 1) win_h = term_h - 1;
+    if (win_h > term_h - 2) win_h = term_h - 2;
 
     int win_x = (term_w > win_w) ? (term_w - win_w) / 2 : 0;
-    int win_y = (term_h - 1 > win_h) ? (term_h - 1 - win_h) / 2 : 0;
+    int win_y = 1 + (term_h - 2 > win_h ? (term_h - 2 - win_h) / 2 : 0);
 
     int restored_x = win_x;
     int restored_y = win_y;
@@ -686,20 +866,135 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
     std::cout << Colors::HIDE_CURSOR;
 
+    // Funcao centralizada para execucao de acoes do menu / atalhos
+    auto execute_action = [&](int action_id) {
+        if (action_id == 101) { // Novo
+            if (modified) {
+                show_exit_dlg = true;
+                exit_dlg_choice = 0;
+            } else {
+                lines.clear();
+                lines.push_back("");
+                cursor_row = 0;
+                cursor_col = 0;
+                scroll_row = 0;
+                scroll_col = 0;
+                modified = false;
+                current_file_path = "NONAME.BAS";
+                display_name = "NONAME.BAS";
+                status_msg = "[ Novo Arquivo: NONAME.BAS ]";
+                status_msg_time = std::chrono::steady_clock::now();
+            }
+        } else if (action_id == 102) { // Salvar .BAS (ASCII)
+            std::ofstream out(current_file_path, std::ios::out);
+            for (size_t i = 0; i < lines.size(); ++i) {
+                out << lines[i];
+                if (i + 1 < lines.size()) out << "\n";
+            }
+            out.close();
+            modified = false;
+            status_msg = "[ Salvo com Sucesso: " + extract_file_name(current_file_path) + " ]";
+            status_msg_time = std::chrono::steady_clock::now();
+        } else if (action_id == 103) { // Sair
+            if (modified) {
+                show_exit_dlg = true;
+                exit_dlg_choice = 0;
+            } else {
+                running = false;
+            }
+        } else if (action_id == 201) { // Caracteres Graficos
+            show_graphics_modal = true;
+        } else if (action_id == 301) { // Compilar para .P (ZX-81)
+            // 1. Auto-salva arquivo fonte .BAS primeiro
+            {
+                std::ofstream out(current_file_path, std::ios::out);
+                for (size_t i = 0; i < lines.size(); ++i) {
+                    out << lines[i];
+                    if (i + 1 < lines.size()) out << "\n";
+                }
+                out.close();
+                modified = false;
+            }
+
+            // 2. Determina nome do arquivo binario .P
+            std::string p_filename = current_file_path;
+            size_t dot_pos = p_filename.find_last_of('.');
+            if (dot_pos != std::string::npos) {
+                p_filename = p_filename.substr(0, dot_pos) + ".P";
+            } else {
+                p_filename += ".P";
+            }
+
+            // 3. Monta o codigo fonte completo
+            std::string full_src = "";
+            for (size_t i = 0; i < lines.size(); ++i) {
+                full_src += lines[i] + "\n";
+            }
+
+            // 4. Executa a compilacao com ZXText2P nativo
+            compiler::CompilerOptions c_opts;
+            c_opts.use_labels = cfg.get_compiler_labels_mode();
+            c_opts.auto_detect_mode = true;
+            c_opts.start_line = cfg.get_compiler_start_line();
+            c_opts.line_increment = cfg.get_compiler_line_increment();
+
+            auto res = compiler::ZXText2P::compile_source(full_src, c_opts);
+            if (res.success) {
+                bool saved = compiler::ZXText2P::save_p_file(p_filename, res.p_data);
+                if (saved) {
+                    compile_success_msg = extract_file_name(p_filename) + " (" + 
+                                          std::to_string(res.total_p_bytes) + " bytes, " + 
+                                          std::to_string(res.total_lines) + " linhas)";
+                    show_compile_success_modal = true;
+                    status_msg = "[ Compilado com Sucesso -> " + extract_file_name(p_filename) + " ]";
+                    status_msg_time = std::chrono::steady_clock::now();
+                } else {
+                    compile_error_msg = "Falha ao gravar arquivo no disco: " + p_filename;
+                    compile_error_line = 0;
+                    show_compile_error_modal = true;
+                }
+            } else {
+                compile_error_msg = res.error_message;
+                compile_error_line = res.error_line;
+                show_compile_error_modal = true;
+                status_msg = "[ Erro na Linha " + std::to_string(res.error_line) + ": " + res.error_message + " ]";
+                status_msg_time = std::chrono::steady_clock::now();
+            }
+        } else if (action_id == 302) { // Opcoes do Compilador
+            show_compiler_opts_modal = true;
+            compiler_opts_focus = 0;
+        } else if (action_id >= 401 && action_id <= 404) { // Temas
+            std::string new_t = "normal";
+            if (action_id == 402) new_t = "invertido";
+            else if (action_id == 403) new_t = "claro";
+            else if (action_id == 404) new_t = "escuro";
+            cfg.set_theme(new_t);
+            theme_name = new_t;
+            theme = get_editor_theme(theme_name);
+            status_msg = "[ Tema: " + theme_name + " ]";
+            status_msg_time = std::chrono::steady_clock::now();
+        } else if (action_id == 501) { // Ajuda
+            show_help_modal = true;
+        } else if (action_id == 502) { // Sobre
+            show_about_modal = true;
+        }
+    };
+
     // Loop Principal de Edicao
     while (running) {
         get_terminal_size(term_w, term_h);
 
         if (maximized) {
             win_x = 0;
-            win_y = 0;
+            win_y = 1;
             win_w = term_w;
-            win_h = term_h - 1;
+            win_h = std::max(3, term_h - 2);
         } else {
             if (win_w > term_w) win_w = term_w;
-            if (win_h > term_h - 1) win_h = term_h - 1;
+            if (win_h > term_h - 2) win_h = term_h - 2;
             if (win_x + win_w > term_w) win_x = std::max(0, term_w - win_w);
-            if (win_y + win_h > term_h - 1) win_y = std::max(0, term_h - 1 - win_h);
+            if (win_y < 1) win_y = 1;
+            if (win_y + win_h > term_h - 1) win_y = std::max(1, term_h - 1 - win_h);
         }
 
         int inner_w = std::max(1, win_w - 2);
@@ -746,8 +1041,32 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             h_thumb_pos = (int)(h_ratio * (h_track_len - 1));
         }
 
-        // Renderizar linha por linha da tela do terminal
-        for (int y = 0; y < term_h - 1; ++y) {
+        // -------------------------------------------------------------
+        // LINHA 0: BARRA DE MENUS SUPERIOR (MS-DOS / Turbo C++)
+        // -------------------------------------------------------------
+        buf << theme.menu_bar_fg << theme.menu_bar_bg;
+        int m_col = 0;
+        for (size_t m = 0; m < menus.size(); ++m) {
+            bool is_active_menu = (menu_active && (int)m == active_menu_idx);
+            std::string m_title = " " + menus[m].title + " ";
+            if (is_active_menu) {
+                buf << theme.menu_active_fg << theme.menu_active_bg << m_title;
+            } else {
+                buf << theme.menu_bar_fg << theme.menu_bar_bg << m_title;
+            }
+            m_col += (int)m_title.size();
+        }
+        buf << theme.menu_bar_fg << theme.menu_bar_bg;
+        while (m_col < term_w) {
+            buf << ' ';
+            m_col++;
+        }
+        buf << Colors::RESET << "\n";
+
+        // -------------------------------------------------------------
+        // LINHAS 1 A term_h - 2: DESKTOP E JANELA DO EDITOR
+        // -------------------------------------------------------------
+        for (int y = 1; y < term_h - 1; ++y) {
             if (y < win_y || y >= win_y + win_h) {
                 buf << theme.desktop_fg << theme.desktop_bg;
                 for (int x = 0; x < term_w; ++x) {
@@ -764,7 +1083,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 }
             }
 
-            // LINHA 0: BARRA DE TITULO / BORDA SUPERIOR
+            // LINHA 0 DA JANELA: BARRA DE TITULO / BORDA SUPERIOR
             if (y == win_y) {
                 buf << theme.frame_fg << theme.frame_bg;
                 buf << "╔";
@@ -871,10 +1190,12 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             buf << Colors::RESET << "\n";
         }
 
+        // -------------------------------------------------------------
         // LINHA INFERIOR DO TERMINAL: BARRA DE ATALHOS / STATUS DO SISTEMA
+        // -------------------------------------------------------------
         {
             buf << theme.status_fg << theme.status_bg;
-            std::string help_bar = " F1:Ajuda  F2:Salvar  F4:Graficos  F5:Zoom  F7:Opcoes  F9:Compilar.P  Esc:Sair | L:" + 
+            std::string help_bar = " F1:Ajuda  F2:Salvar  F4:Graficos  F7:Config  F9:Compilar.P  F10:Menu  Esc:Sair | L:" + 
                                    std::to_string(cursor_row + 1) + " C:" + std::to_string(cursor_col + 1);
 
             auto now = std::chrono::steady_clock::now();
@@ -894,8 +1215,53 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         }
 
         // =============================================================
-        // RENDERIZACAO DE MODAIS
+        // RENDERIZACAO DE DROPDOWNS E MODAIS
         // =============================================================
+
+        // DROPDOWN MENU ABERTO (se menu_active == true)
+        if (menu_active && active_menu_idx >= 0 && active_menu_idx < (int)menus.size()) {
+            const auto& cur_menu = menus[active_menu_idx];
+            int drop_x = cur_menu.x_pos;
+            int drop_y = 1; // Linha logo abaixo da barra de menus
+            int drop_inner_w = 26;
+            for (const auto& it : cur_menu.items) {
+                int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+                if (len > drop_inner_w) drop_inner_w = len;
+            }
+            int drop_w = drop_inner_w + 2;
+            int num_items = (int)cur_menu.items.size();
+
+            // Borda superior
+            buf << "\x1b[" << (drop_y + 1) << ";" << (drop_x + 1) << "H";
+            buf << theme.drop_border_fg << theme.drop_border_bg << "┌" << repeat_utf8("─", drop_inner_w) << "┐";
+
+            // Itens do dropdown
+            for (int i = 0; i < num_items; ++i) {
+                buf << "\x1b[" << (drop_y + 2 + i) << ";" << (drop_x + 1) << "H";
+                buf << theme.drop_border_fg << theme.drop_border_bg << "│";
+
+                std::string item_str = format_menu_item(cur_menu.items[i].label, cur_menu.items[i].shortcut, drop_inner_w);
+                if (i == active_item_idx) {
+                    buf << theme.drop_sel_fg << theme.drop_sel_bg << item_str;
+                } else {
+                    buf << theme.drop_item_fg << theme.drop_item_bg << item_str;
+                }
+                buf << theme.drop_border_fg << theme.drop_border_bg << "│";
+
+                // Sombra lateral direita MS-DOS
+                buf << theme.drop_shadow_fg << theme.drop_shadow_bg << "▒";
+            }
+
+            // Borda inferior
+            buf << "\x1b[" << (drop_y + 2 + num_items) << ";" << (drop_x + 1) << "H";
+            buf << theme.drop_border_fg << theme.drop_border_bg << "└" << repeat_utf8("─", drop_inner_w) << "┘";
+            buf << theme.drop_shadow_fg << theme.drop_shadow_bg << "▒";
+
+            // Sombra inferior MS-DOS
+            buf << "\x1b[" << (drop_y + 3 + num_items) << ";" << (drop_x + 2) << "H";
+            buf << theme.drop_shadow_fg << theme.drop_shadow_bg << repeat_utf8("▒", drop_w);
+            buf << Colors::RESET;
+        }
 
         // 1. MODAL DE CONFIRMACAO DE SAIDA
         if (show_exit_dlg) {
@@ -946,7 +1312,6 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
             buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << " Navegue com as setas e tecle Enter para inserir o escape:   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
-            // 12 linhas de itens em 2 colunas
             for (int row = 0; row < 12; ++row) {
                 int idx1 = row;
                 int idx2 = row + 12;
@@ -1089,19 +1454,19 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F9 / Ctrl+B : Compila o fonte para binario ZX-81 (.P)   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 9) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    Esc / Alt+X : Encerra e fecha a janela do editor        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F10 / Alt+M : Ativa e foca a Barra de Menus superior    " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 10) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                            " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    Esc / Alt+X : Encerra e fecha a janela do editor        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 11) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Recursos de Edicao:                                       " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                            " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 12) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    - Destaque de Sintaxe para comandos, numeros e strings  " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Recursos: Destaque de sintaxe, suporte completo a mouse   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 13) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    - Suporte a Mouse: Arrastar titulo, Redimensionar (◢)   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  e menus padrao Turbo C++ / MS-DOS.                        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
 
             buf << "\x1b[" << (dlg_y + 14) << ";" << (dlg_x + 1) << "H";
             buf << "║" << theme.dlg_body_bg << "               [ Pressione Enter ou Esc para Fechar ]         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
@@ -1130,7 +1495,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             // Opcao 0: Modo Labels
             buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
             buf << "║" << theme.dlg_body_bg << "    Modo Labels (@label): ";
-            std::string lbl_val = labels_mode ? "[ Ativado (Sim) ]" : "[ Numeros Explicitos ]";
+            std::string lbl_val = labels_mode ? "[ Ativado (Sim) ]" : "[ Auto-Deteccao ]";
             if (compiler_opts_focus == 0) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << lbl_val << theme.dlg_body_bg;
             else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << lbl_val;
             buf << "      " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
@@ -1161,9 +1526,46 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             buf << "╚══════════════════════════════════════════════════════╝" << Colors::RESET;
         }
 
+        // 7. MODAL SOBRE (About)
+        if (show_about_modal) {
+            int dlg_w = 54;
+            int dlg_h = 13;
+            int dlg_x = std::max(0, (term_w - dlg_w) / 2);
+            int dlg_y = std::max(0, (term_h - dlg_h) / 2);
+
+            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
+            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔═════════════[ Sobre o zx81ide ]═════════════╗";
+            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  zx81ide - IDE para Sinclair ZX-81 & Clones         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
+            std::string ver_line = "  Versao      : v" + get_version_string();
+            if (ver_line.size() < 51) ver_line.append(51 - ver_line.size(), ' ');
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << ver_line << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Hardware (X): Sinclair ZX81 (Foundation)          " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Jogo     (Y): 3D Monster Maze                      " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Compilador  : ZXText2P C++ Nativo Embutido         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 7) << ";" << (dlg_x + 1) << "H";
+            std::string theme_line = "  Tema Ativo  : " + theme_name + " (SQLite 3)";
+            if (theme_line.size() < 51) theme_line.append(51 - theme_line.size(), ' ');
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << theme_line << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 8) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Autor       : Wilson \"Barney\" Pilon                " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 9) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Inspiracao  : fwMSX (Basic Dignified Suite)        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 10) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                     " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 11) << ";" << (dlg_x + 1) << "H";
+            buf << "║" << theme.dlg_body_bg << "                     [  OK  ]                         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            buf << "\x1b[" << (dlg_y + 12) << ";" << (dlg_x + 1) << "H";
+            buf << "╚════════════════════════════════════════════════════╝" << Colors::RESET;
+        }
+
         // Posicionar cursor real do console na posicao de digitacao
         bool any_modal_open = show_exit_dlg || show_graphics_modal || show_compile_error_modal || 
-                              show_compile_success_modal || show_help_modal || show_compiler_opts_modal;
+                              show_compile_success_modal || show_help_modal || show_compiler_opts_modal || show_about_modal || menu_active;
 
         if (!any_modal_open) {
             int cursor_screen_x = win_x + 1 + (cursor_col - scroll_col) + 1;
@@ -1209,6 +1611,49 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 }
 
                 if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    // 0. Clique na Barra de Menus Superior (Linha 0)
+                    if (mpos.Y == 0) {
+                        for (size_t m = 0; m < menus.size(); ++m) {
+                            if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                active_menu_idx = (int)m;
+                                active_item_idx = 0;
+                                menu_active = true;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+
+                    // Se menu dropdown estiver aberto, processa clique no menu
+                    if (menu_active) {
+                        const auto& cur_menu = menus[active_menu_idx];
+                        int drop_x = cur_menu.x_pos;
+                        int drop_y = 1;
+                        int num_items = (int)cur_menu.items.size();
+                        int drop_inner_w = 26;
+                        for (const auto& it : cur_menu.items) {
+                            int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+                            if (len > drop_inner_w) drop_inner_w = len;
+                        }
+                        int drop_w = drop_inner_w + 2;
+
+                        if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
+                            mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
+                            int clicked_idx = mpos.Y - (drop_y + 1);
+                            if (clicked_idx >= 0 && clicked_idx < num_items) {
+                                int act_id = cur_menu.items[clicked_idx].id;
+                                menu_active = false;
+                                execute_action(act_id);
+                                break;
+                            }
+                        } else {
+                            menu_active = false;
+                            break;
+                        }
+                        continue;
+                    }
+
+                    // Modais ativos com clique
                     if (show_exit_dlg) {
                         int dlg_w = 46;
                         int dlg_h = 7;
@@ -1217,12 +1662,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
                         if (mpos.Y == dlg_y + 4) {
                             if (mpos.X >= dlg_x + 3 && mpos.X <= dlg_x + 13) {
-                                std::ofstream out(file_path, std::ios::out);
-                                for (size_t i = 0; i < lines.size(); ++i) {
-                                    out << lines[i];
-                                    if (i + 1 < lines.size()) out << "\n";
-                                }
-                                out.close();
+                                execute_action(102); // Salva
                                 running = false;
                             } else if (mpos.X >= dlg_x + 16 && mpos.X <= dlg_x + 26) {
                                 running = false;
@@ -1230,7 +1670,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 show_exit_dlg = false;
                             }
                         }
-                        continue;
+                        break;
                     }
 
                     if (show_compile_error_modal) {
@@ -1240,22 +1680,27 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             cursor_col = 0;
                             scroll_row = std::max(0, cursor_row - inner_h / 2);
                         }
-                        continue;
+                        break;
                     }
 
                     if (show_compile_success_modal) {
                         show_compile_success_modal = false;
-                        continue;
+                        break;
+                    }
+
+                    if (show_about_modal) {
+                        show_about_modal = false;
+                        break;
                     }
 
                     if (show_help_modal) {
                         show_help_modal = false;
-                        continue;
+                        break;
                     }
 
                     if (show_compiler_opts_modal) {
                         show_compiler_opts_modal = false;
-                        continue;
+                        break;
                     }
 
                     if (show_graphics_modal) {
@@ -1274,7 +1719,6 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             }
                         } else if (mpos.Y == dlg_y + 15) {
                             if (mpos.X >= dlg_x + 4 && mpos.X <= dlg_x + 32) {
-                                // Inserir
                                 std::string esc = gfx_table[graphics_sel_idx].escape_seq;
                                 lines[cursor_row].insert(cursor_col, esc);
                                 cursor_col += (int)esc.size();
@@ -1286,21 +1730,16 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 show_graphics_modal = false;
                             }
                         }
-                        continue;
+                        break;
                     }
 
                     // 1. Botao fechar [×]
                     if (mpos.Y == win_y && mpos.X >= win_x + 2 && mpos.X <= win_x + 4) {
-                        if (modified) {
-                            show_exit_dlg = true;
-                            exit_dlg_choice = 0;
-                        } else {
-                            running = false;
-                        }
-                        continue;
+                        execute_action(103);
+                        break;
                     }
 
-                    // 2. Botao maximizar/restaurar
+                    // 2. Botao maximizar/restaurar [▲] / [↕]
                     if (mpos.Y == win_y && mpos.X >= win_x + win_w - 5 && mpos.X <= win_x + win_w - 3) {
                         maximized = !maximized;
                         if (!maximized) {
@@ -1309,7 +1748,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             win_w = restored_w;
                             win_h = restored_h;
                         }
-                        continue;
+                        break;
                     }
 
                     // 3. Juncao inferior direita (◢)
@@ -1317,7 +1756,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         if (!maximized) {
                             is_resizing = true;
                         }
-                        continue;
+                        break;
                     }
 
                     // 4. Barra vertical
@@ -1333,7 +1772,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 cursor_row = (int)(ratio * (total_lines - 1));
                             }
                         }
-                        continue;
+                        break;
                     }
 
                     // 5. Barra horizontal
@@ -1349,7 +1788,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 cursor_col = (int)(ratio * max_col_observed);
                             }
                         }
-                        continue;
+                        break;
                     }
 
                     // 6. Arrastar barra de titulo
@@ -1357,7 +1796,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         is_dragging = true;
                         drag_offset_x = mpos.X - win_x;
                         drag_offset_y = mpos.Y - win_y;
-                        continue;
+                        break;
                     }
 
                     // 7. Clique no texto
@@ -1368,7 +1807,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         cursor_row = std::max(0, std::min((int)lines.size() - 1, click_r));
                         int target_line_len = (int)lines[cursor_row].size();
                         cursor_col = std::max(0, std::min(target_line_len, click_c));
-                        continue;
+                        break;
                     }
                 }
 
@@ -1382,7 +1821,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         restored_h = win_h;
                     } else if (is_dragging && !maximized) {
                         win_x = std::max(0, std::min(term_w - win_w, (int)mpos.X - drag_offset_x));
-                        win_y = std::max(0, std::min(term_h - 1 - win_h, (int)mpos.Y - drag_offset_y));
+                        win_y = std::max(1, std::min(term_h - 2 - win_h, (int)mpos.Y - drag_offset_y));
                         restored_x = win_x;
                         restored_y = win_y;
                     }
@@ -1410,12 +1849,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     if (vk == VK_ESCAPE || wc == 'c' || wc == 'C') {
                         show_exit_dlg = false;
                     } else if (wc == 's' || wc == 'S' || (vk == VK_RETURN && exit_dlg_choice == 0)) {
-                        std::ofstream out(file_path, std::ios::out);
-                        for (size_t i = 0; i < lines.size(); ++i) {
-                            out << lines[i];
-                            if (i + 1 < lines.size()) out << "\n";
-                        }
-                        out.close();
+                        execute_action(102); // Salva
                         running = false;
                     } else if (wc == 'n' || wc == 'N' || (vk == VK_RETURN && exit_dlg_choice == 1)) {
                         running = false;
@@ -1424,33 +1858,47 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     } else if (vk == VK_RIGHT || vk == VK_TAB) {
                         exit_dlg_choice = (exit_dlg_choice + 1) % 3;
                     }
-                    continue;
+                    break;
                 }
 
                 // 2. Modal de Erro de Compilacao
                 if (show_compile_error_modal) {
-                    show_compile_error_modal = false;
-                    if (compile_error_line > 0 && compile_error_line <= (int)lines.size()) {
-                        cursor_row = compile_error_line - 1;
-                        cursor_col = 0;
-                        scroll_row = std::max(0, cursor_row - inner_h / 2);
+                    if (vk == VK_RETURN || vk == VK_ESCAPE || vk == VK_SPACE) {
+                        show_compile_error_modal = false;
+                        if (compile_error_line > 0 && compile_error_line <= (int)lines.size()) {
+                            cursor_row = compile_error_line - 1;
+                            cursor_col = 0;
+                            scroll_row = std::max(0, cursor_row - inner_h / 2);
+                        }
                     }
-                    continue;
+                    break;
                 }
 
                 // 3. Modal de Sucesso de Compilacao
                 if (show_compile_success_modal) {
-                    show_compile_success_modal = false;
-                    continue;
+                    if (vk == VK_RETURN || vk == VK_ESCAPE || vk == VK_SPACE) {
+                        show_compile_success_modal = false;
+                    }
+                    break;
                 }
 
-                // 4. Modal de Ajuda
+                // 4. Modal Sobre (About)
+                if (show_about_modal) {
+                    if (vk == VK_RETURN || vk == VK_ESCAPE || vk == VK_SPACE) {
+                        show_about_modal = false;
+                    }
+                    break;
+                }
+
+                // 5. Modal de Ajuda
                 if (show_help_modal) {
-                    show_help_modal = false;
-                    continue;
+                    if (vk == VK_RETURN || vk == VK_ESCAPE || vk == VK_SPACE) {
+                        show_help_modal = false;
+                    }
+                    break;
                 }
 
-                // 5. Modal de Opcoes do Compilador (F7 / Ctrl+T)
+                // 6. Modal de Opcoes do Compilador (F7 / Ctrl+T)
                 if (show_compiler_opts_modal) {
                     if (vk == VK_ESCAPE) {
                         show_compiler_opts_modal = false;
@@ -1484,10 +1932,10 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             cfg.set_compiler_line_increment(std::min(100, inc + 1));
                         }
                     }
-                    continue;
+                    break;
                 }
 
-                // 6. Modal de Caracteres Graficos (F4 / Ctrl+G)
+                // 7. Modal de Caracteres Graficos (F4 / Ctrl+G)
                 if (show_graphics_modal) {
                     if (vk == VK_ESCAPE) {
                         show_graphics_modal = false;
@@ -1506,34 +1954,95 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         status_msg = "[ Inserido: " + esc + " ]";
                         status_msg_time = std::chrono::steady_clock::now();
                     }
-                    continue;
+                    break;
                 }
 
-                // Atalhos Globais:
+                // 8. Navegacao na Barra de Menus (se menu_active == true)
+                if (menu_active) {
+                    if (vk == VK_F10 || vk == VK_ESCAPE) {
+                        menu_active = false;
+                    } else if (vk == VK_LEFT) {
+                        active_menu_idx = (active_menu_idx + (int)menus.size() - 1) % (int)menus.size();
+                        active_item_idx = 0;
+                    } else if (vk == VK_RIGHT) {
+                        active_menu_idx = (active_menu_idx + 1) % (int)menus.size();
+                        active_item_idx = 0;
+                    } else if (vk == VK_UP) {
+                        int num_items = (int)menus[active_menu_idx].items.size();
+                        active_item_idx = (active_item_idx + num_items - 1) % num_items;
+                    } else if (vk == VK_DOWN) {
+                        int num_items = (int)menus[active_menu_idx].items.size();
+                        active_item_idx = (active_item_idx + 1) % num_items;
+                    } else if (vk == VK_RETURN) {
+                        int act_id = menus[active_menu_idx].items[active_item_idx].id;
+                        menu_active = false;
+                        execute_action(act_id);
+                    }
+                    break;
+                }
+
+                // Atalhos de Menu (Alt+Letra):
+                if (is_alt && (vk == 'A' || vk == 'a')) {
+                    menu_active = true;
+                    active_menu_idx = 0;
+                    active_item_idx = 0;
+                    break;
+                }
+                if (is_alt && (vk == 'E' || vk == 'e')) {
+                    menu_active = true;
+                    active_menu_idx = 1;
+                    active_item_idx = 0;
+                    break;
+                }
+                if (is_alt && (vk == 'C' || vk == 'c')) {
+                    menu_active = true;
+                    active_menu_idx = 2;
+                    active_item_idx = 0;
+                    break;
+                }
+                if (is_alt && (vk == 'O' || vk == 'o')) {
+                    menu_active = true;
+                    active_menu_idx = 3;
+                    active_item_idx = 0;
+                    break;
+                }
+                if (is_alt && (vk == 'H' || vk == 'h' || vk == 'J' || vk == 'j')) {
+                    menu_active = true;
+                    active_menu_idx = 4;
+                    active_item_idx = 0;
+                    break;
+                }
+
+                // F10: Ativar/Desativar Barra de Menus
+                if (vk == VK_F10) {
+                    menu_active = !menu_active;
+                    active_menu_idx = 0;
+                    active_item_idx = 0;
+                    break;
+                }
+
                 // F1: Ajuda
                 if (vk == VK_F1) {
-                    show_help_modal = true;
-                    continue;
+                    execute_action(501);
+                    break;
                 }
 
                 // F2 / Ctrl+S: Salvar ASCII .BAS
                 if (vk == VK_F2 || (is_ctrl && (vk == 'S' || vk == 's'))) {
-                    std::ofstream out(file_path, std::ios::out);
-                    for (size_t i = 0; i < lines.size(); ++i) {
-                        out << lines[i];
-                        if (i + 1 < lines.size()) out << "\n";
-                    }
-                    out.close();
-                    modified = false;
-                    status_msg = "[ Salvo com Sucesso! ]";
-                    status_msg_time = std::chrono::steady_clock::now();
-                    continue;
+                    execute_action(102);
+                    break;
+                }
+
+                // Ctrl+N: Novo Arquivo
+                if (is_ctrl && (vk == 'N' || vk == 'n')) {
+                    execute_action(101);
+                    break;
                 }
 
                 // F4 / Ctrl+G: Seletor de Caracteres Graficos ZX-81
                 if (vk == VK_F4 || (is_ctrl && (vk == 'G' || vk == 'g'))) {
-                    show_graphics_modal = true;
-                    continue;
+                    execute_action(201);
+                    break;
                 }
 
                 // F5: Maximizar / Restaurar janela
@@ -1545,78 +2054,28 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         win_w = restored_w;
                         win_h = restored_h;
                     }
-                    continue;
+                    break;
                 }
 
                 // F7 / Ctrl+T: Parametros do Compilador ZXText2P
                 if (vk == VK_F7 || (is_ctrl && (vk == 'T' || vk == 't'))) {
-                    show_compiler_opts_modal = true;
-                    compiler_opts_focus = 0;
-                    continue;
+                    execute_action(302);
+                    break;
                 }
 
                 // F9 / Ctrl+B: Compilar para Formato .P do ZX-81
                 if (vk == VK_F9 || (is_ctrl && (vk == 'B' || vk == 'b'))) {
-                    // Auto-salva arquivo fonte primeiro
-                    {
-                        std::ofstream out(file_path, std::ios::out);
-                        for (size_t i = 0; i < lines.size(); ++i) {
-                            out << lines[i];
-                            if (i + 1 < lines.size()) out << "\n";
-                        }
-                        out.close();
-                        modified = false;
-                    }
-
-                    // Nome do arquivo .P
-                    std::string p_filename = file_path;
-                    size_t dot_pos = p_filename.find_last_of('.');
-                    if (dot_pos != std::string::npos) {
-                        p_filename = p_filename.substr(0, dot_pos) + ".p";
-                    } else {
-                        p_filename += ".p";
-                    }
-
-                    // Juntar todas as linhas
-                    std::string full_src = "";
-                    for (size_t i = 0; i < lines.size(); ++i) {
-                        full_src += lines[i] + "\n";
-                    }
-
-                    compiler::CompilerOptions c_opts;
-                    c_opts.use_labels = cfg.get_compiler_labels_mode();
-                    c_opts.start_line = cfg.get_compiler_start_line();
-                    c_opts.line_increment = cfg.get_compiler_line_increment();
-
-                    auto res = compiler::ZXText2P::compile_source(full_src, c_opts);
-                    if (res.success) {
-                        compiler::ZXText2P::save_p_file(p_filename, res.p_data);
-                        compile_success_msg = extract_file_name(p_filename) + " (" + 
-                                              std::to_string(res.total_p_bytes) + " bytes, " + 
-                                              std::to_string(res.total_lines) + " linhas)";
-                        show_compile_success_modal = true;
-                        status_msg = "[ Compilado com Sucesso -> " + extract_file_name(p_filename) + " ]";
-                        status_msg_time = std::chrono::steady_clock::now();
-                    } else {
-                        compile_error_msg = res.error_message;
-                        compile_error_line = res.error_line;
-                        show_compile_error_modal = true;
-                    }
-                    continue;
+                    execute_action(301);
+                    break;
                 }
 
                 // ESC ou Alt+X ou Ctrl+Q: Sair
                 if (vk == VK_ESCAPE || (is_alt && (vk == 'X' || vk == 'x')) || (is_ctrl && (vk == 'Q' || vk == 'q'))) {
-                    if (modified) {
-                        show_exit_dlg = true;
-                        exit_dlg_choice = 0;
-                    } else {
-                        running = false;
-                    }
-                    continue;
+                    execute_action(103);
+                    break;
                 }
 
-                // Navegacao
+                // Navegacao no texto
                 if (vk == VK_UP) {
                     cursor_row = std::max(0, cursor_row - 1);
                 } else if (vk == VK_DOWN) {

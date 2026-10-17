@@ -4,6 +4,27 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.11] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.11 [3D Monster Maze] - Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P`
+
+* **Versão:** `0.1.11`
+* **Tag Git:** `v0.1.11`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.11.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.11** aprimora a usabilidade e a estabilidade do fluxo de edição e compilação do **zx81ide**:
+1. **Menu Bar Persistente no Editor:** A barra de menus superior (`Arquivo`, `Editar`, `Compilar`, `Opcoes`, `Ajuda`) agora permanece permanentemente visível na Linha 0 em todos os modos e tamanhos de janela, com menus dropdown em cascata contendo sombra pontilhada MS-DOS (`▒`), navegação por teclado (`F10`, `Alt+A/E/C/O/H`) e suporte integral a mouse.
+2. **Correção do Atalho F9 e Feedback Visual dos Modais:** O acionamento de `F9` ou `Compilar -> Compilar para .P` agora compila confiavelmente o código fonte para binário `.P` e exibe o modal de sucesso com métricas de bytes e linhas sem fechamento prematuro no loop de eventos do console.
+3. **Auto-detecção de Modo Labels no Compilador ZXText2P:** Fontes BASIC sem numeração inicial ou com numeração mista são auto-detectados e compilados com numeração automática em vez de falharem silenciosamente.
+4. **Execução de Compilação Direta via CLI:** O comando `zx81ide compile <arquivo.bas> [-o <saida.p>]` agora pode ser executado diretamente do terminal do sistema operacional (PowerShell / Prompt de Comando).
+
+---
+
 ## [v0.1.10] - 2026-10-17
 ### Título do Lançamento: `zx81ide v0.1.10 [3D Monster Maze] - Compilador ZXText2P C++ nativo, syntax highlighting e seletor de caracteres graficos`
 
