@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
         case AppMode::TUI:
             cfg.prompt_theme_selection_if_needed();
-            return zx81ide::ui_tui::run_tui();
+            return zx81ide::ui_tui::run_tui(options.source_file);
 
         case AppMode::GUI:
             std::cout << "Modo GUI desktop (Dear ImGui) esta em fase de planejamento/desenvolvimento.\n";

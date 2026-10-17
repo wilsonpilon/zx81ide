@@ -534,8 +534,12 @@ int run_interactive_cli() {
             zx81ide::editor::run_text_editor(file_to_edit);
             std::cout << "\n[Retornando ao console CLI zx81ide]\n\n";
         } else if (primary_cmd == "tui") {
-            std::cout << "\nIniciando modo TUI retro... Pressione qualquer tecla para continuar se solicitado.\n";
-            zx81ide::ui_tui::run_tui();
+            std::string file_to_open = "";
+            if (tokens.size() > 1) {
+                file_to_open = tokens[1];
+            }
+            std::cout << "\nIniciando modo TUI retro...\n";
+            zx81ide::ui_tui::run_tui(file_to_open);
             std::cout << "\n[Retornando ao console CLI zx81ide]\n\n";
         } else if (primary_cmd == "version" || primary_cmd == "ver") {
             print_version();

@@ -4,6 +4,27 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.12] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.12 [3D Monster Maze] - Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS`
+
+* **Versão:** `0.1.12`
+* **Tag Git:** `v0.1.12`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.12.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.12** conclui a integração da TUI com o Editor de Texto, trazendo a experiência clássica de janelas móveis da era MS-DOS / Borland Turbo Vision:
+1. **Janela Flutuante com Sombra MS-DOS:** Ao abrir o editor na TUI (`zx81ide --tui`), o editor surge como uma janela flutuante centralizada sobre o desktop pontilhado (`░░`), com bordas visíveis ao redor e autêntica sombra projetada (`▒▒`) no canto inferior e direito.
+2. **Arrasto, Redimensionamento e Zoom:** A janela pode ser movida pelo topo segurando com o mouse, redimensionada pelo canto inferior direito (`◢`) e maximizada/restaurada via botão `[▲]` / `[↕]` ou atalho `F5`.
+3. **Fechamento Limpo da Janela:** Fechar a janela (`[×]`, `Ctrl+F4`, `Esc` ou `Arquivo -> Fechar Janela`) retorna suavemente ao desktop da TUI. O comando `Arquivo -> Sair da TUI` (`Alt+X`) encerra a aplicação.
+4. **Suporte Completo a Mouse na TUI:** A área da TUI (barra de menus superior, submenus suspensos e caixas de diálogo) agora responde a cliques de mouse através da API `ReadConsoleInputW`.
+
+---
+
 ## [v0.1.11] - 2026-10-17
 ### Título do Lançamento: `zx81ide v0.1.11 [3D Monster Maze] - Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P`
 

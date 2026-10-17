@@ -117,7 +117,7 @@ zx81ide [opcoes]
 * `-h`, `--help`: Exibe a síntese de opções e ajuda da aplicação.
 * `-v`, `--version`: Exibe a versão semântica, marcos de hardware e codenames.
 * `--cli`: Inicia no console interativo CLI (padrão se nenhum argumento for fornecido).
-* `--tui`: Inicia diretamente na interface gráfica de terminal (TUI retro MS-DOS).
+* `--tui [arquivo.bas]`: Inicia diretamente na interface gráfica de terminal (TUI retro MS-DOS), abrindo opcionalmente o editor como janela flutuante.
 * `--gui`: Inicia no modo desktop gráfico (em desenvolvimento).
 
 ### 5.2. Console Interativo CLI (`zx81ide>`)
@@ -127,28 +127,38 @@ Ao executar `zx81ide.exe` sem parâmetros, o console interativo é iniciado exib
 zx81ide> help
 Comandos Disponiveis no Console CLI:
   help, ?           Exibe esta lista de comandos
-  tui               Inicia a interface retro MS-DOS em modo texto (TUI)
+  tui [arquivo]     Inicia a interface retro MS-DOS em modo texto (TUI) com editor integrado opcional
   version, ver      Exibe os detalhes completos de versao e codenames
   clear, cls        Limpa a tela do console
   exit, quit, q     Encerra o zx81ide
 ```
 
-### 5.3. Interface Retro de Terminal (TUI)
-O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares clássicos da era MS-DOS dos anos 1990 (Turbo Vision / Borland C++):
+### 5.3. Interface Retro de Terminal (TUI) & Editor Flutuante Integrado
+O comando `tui [arquivo]` (ou a flag `--tui [arquivo]`) aciona a interface inspirada nos softwares clássicos da era MS-DOS dos anos 1990 (Turbo Vision / Borland C++):
 * **Paleta Sinclair ZX-81:** Estritamente **Preto**, **Branco** e **Cinza**.
-* **Barra de Menus (Linha 1):** Fundo preto com texto branco.
-  * `Arquivo` -> `Sair (Alt+X)`
-  * `Help` -> `About... (F1)`
-* **Desktop:** Área central com padrão quadriculado ASCII em cinza e branco (`░░▒▒`).
-* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: escuro | v0.1.9`).
+* **Suporte Completo a Mouse:** Menus, dropdowns e botões de diálogo respondem a cliques via `ReadConsoleInputW`.
+* **Barra de Menus Superior (Linha 0):**
+  * `Arquivo`: `Editor Livre (F3)`, `Sair da TUI (Alt+X)`.
+  * `Opcoes`: Temas `Normal (F2)`, `Invertido`, `Claro`, `Escuro`.
+  * `Ajuda`: `Sobre o zx81ide (F1)`.
+* **Desktop:** Área central com padrão texturizado quadriculado ASCII (`░░`).
+* **Janela do Editor Flutuante Integrada:**
+  * O editor abre como uma janela centralizada sobre o desktop, deixando margens visíveis em todas as 4 direções.
+  * Autêntica **sombra projetada MS-DOS** (`▒▒`) no canto direito e abaixo da janela.
+  * **Arrasto:** Segure a barra de título superior com o botão esquerdo do mouse para mover a janela pelo desktop.
+  * **Redimensionamento:** Clique e arraste o puxador inferior direito (`◢`) para redimensionar.
+  * **Zoom:** Clique em `[▲]` / `[↕]` ou tecle `F5` para alternar entre tamanho flutuante e maximizado.
+  * **Fechamento:** Clique em `[×]`, tecle `Ctrl+F4` ou `Esc` para fechar a janela e retornar ao desktop da TUI.
+* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão.
 * **Atalhos do Teclado:**
-  * `Setas Esquerda / Direita`: Alterna entre os menus `Arquivo` e `Help`.
-  * `Seta Abaixo / Enter`: Abre o submenu suspenso ou ativa o item selecionado.
-  * `Esc`: Fecha submenus ou caixas de diálogo; sai do modo TUI quando no nível raiz.
-  * `T` ou `F2`: Alterna dinamicamente entre os temas disponíveis (`normal` -> `invertido` -> `claro` -> `escuro`), salvando no SQLite imediatamente.
+  * `Setas`: Navega entre menus e itens de menu.
+  * `Enter`: Abre submenu ou executa o item selecionado.
+  * `Esc`: Fecha submenus / caixas de diálogo ou fecha a janela do editor; no desktop raiz sai da TUI.
+  * `F2` ou `T`: Alterna temas (`normal` -> `invertido` -> `claro` -> `escuro`).
+  * `F3` ou `E`: Abre o Editor de Texto integrado.
   * `F1`: Abre imediatamente o diálogo modal Sobre (About).
   * `F10`: Alterna o foco da barra de menus.
-  * `Alt+X` ou `Q`: Encerra o TUI e retorna ao console.
+  * `Alt+X` ou `Ctrl+Q`: Encerra o TUI e retorna ao console.
 
 ### 5.4. Editor de Texto Livre Turbo C++ (CLI & Standalone)
 O **zx81ide** conta com um editor de texto com estética MS-DOS clássica (Turbo C++ / Turbo Pascal 6):

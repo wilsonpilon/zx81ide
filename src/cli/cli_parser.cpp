@@ -25,6 +25,9 @@ CliOptions parse_arguments(int argc, char* argv[]) {
             return options;
         } else if (arg == "--tui") {
             options.mode = AppMode::TUI;
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                options.source_file = argv[++i];
+            }
         } else if (arg == "--gui") {
             options.mode = AppMode::GUI;
         } else if (arg == "--cli") {

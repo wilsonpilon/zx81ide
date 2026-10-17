@@ -13,7 +13,6 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#include <conio.h>
 #endif
 
 namespace zx81ide {
@@ -91,13 +90,6 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
     th.name = name;
 
     if (name == "invertido") {
-        // =============================================================
-        // TEMA INVERTIDO SINCLAIR ZX-81:
-        // - Menus com fundo cinza, e letras pretas
-        // - Destaques / selecao com fundo preto e letras brancas
-        // - Desktop inverte as cores do normal (FG preto, BG cinza escuro)
-        // - Barra de status com fundo preto e letras brancas
-        // =============================================================
         th.desktop_char    = "░";
         th.desktop_fg      = Colors::FG_BLACK;
         th.desktop_bg      = Colors::BG_GRAY_DARK;
@@ -131,13 +123,6 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
         th.dlg_shadow_fg   = Colors::FG_BLACK;
         th.dlg_shadow_bg   = Colors::BG_GRAY_DARK;
     } else if (name == "escuro") {
-        // =============================================================
-        // TEMA ESCURO SINCLAIR ZX-81:
-        // - Desktop com cores preta e cinza
-        // - Barra de menus com fundo preto e letras em branco
-        // - Destaques / selecao em branco com letras em preto
-        // - Barra de status com fundo preto e letras em branco
-        // =============================================================
         th.desktop_char    = "░";
         th.desktop_fg      = Colors::FG_GRAY_DARK;
         th.desktop_bg      = Colors::BG_BLACK;
@@ -171,13 +156,6 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
         th.dlg_shadow_fg   = Colors::FG_GRAY_DARK;
         th.dlg_shadow_bg   = Colors::BG_BLACK;
     } else if (name == "claro") {
-        // =============================================================
-        // TEMA CLARO SINCLAIR ZX-81:
-        // - Desktop com letra e fundo cinzas
-        // - Barra de status com fundo branco e letras pretas
-        // - Barra de menus com fundo branco e letras pretas
-        // - Destaques / selecao com fundo cinza e letras brancas
-        // =============================================================
         th.desktop_char    = "░";
         th.desktop_fg      = Colors::FG_GRAY_DARK;
         th.desktop_bg      = Colors::BG_GRAY_LIGHT;
@@ -211,7 +189,6 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
         th.dlg_shadow_fg   = Colors::FG_GRAY_DARK;
         th.dlg_shadow_bg   = Colors::BG_GRAY_LIGHT;
     } else {
-        // Padrao "normal" (Sinclair ZX-81 Original)
         th.name            = "normal";
         th.desktop_char    = "░";
         th.desktop_fg      = Colors::FG_GRAY_DARK;
@@ -250,21 +227,58 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
     return th;
 }
 
+#ifdef _WIN32
+DWORD g_prev_in_mode = 0;
+DWORD g_prev_out_mode = 0;
+bool g_console_initialized = false;
+#endif
+
 void setup_console() {
 #ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hOut != INVALID_HANDLE_VALUE) {
         DWORD dwMode = 0;
         if (GetConsoleMode(hOut, &dwMode)) {
+            if (!g_console_initialized) {
+                g_prev_out_mode = dwMode;
+            }
             dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
             SetConsoleMode(hOut, dwMode);
+        }
+    }
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+    if (hIn != INVALID_HANDLE_VALUE) {
+        DWORD dwMode = 0;
+        if (GetConsoleMode(hIn, &dwMode)) {
+            if (!g_console_initialized) {
+                g_prev_in_mode = dwMode;
+                g_console_initialized = true;
+            }
+            dwMode |= ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT | ENABLE_EXTENDED_FLAGS;
+            dwMode &= ~ENABLE_QUICK_EDIT_MODE;
+            SetConsoleMode(hIn, dwMode);
         }
     }
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 #endif
     std::cout << Colors::HIDE_CURSOR;
-    std::cout << "\x1b[2J" << Colors::HOME;
+    std::cout << "\x1b[2J" << Colors::HOME << std::flush;
+}
+
+void restore_console() {
+#ifdef _WIN32
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut != INVALID_HANDLE_VALUE && g_prev_out_mode != 0) {
+        SetConsoleMode(hOut, g_prev_out_mode);
+    }
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+    if (hIn != INVALID_HANDLE_VALUE && g_prev_in_mode != 0) {
+        SetConsoleMode(hIn, g_prev_in_mode);
+    }
+#endif
+    std::cout << Colors::RESET << Colors::SHOW_CURSOR;
+    std::cout << "\x1b[2J" << Colors::HOME << std::flush;
 }
 
 std::string repeat_utf8(const std::string& ch, int count) {
@@ -287,11 +301,6 @@ std::string format_menu_item(const std::string& label, const std::string& shortc
     return text;
 }
 
-void restore_console() {
-    std::cout << Colors::RESET << Colors::SHOW_CURSOR;
-    std::cout << "\x1b[2J" << Colors::HOME;
-}
-
 void get_terminal_size(int& width, int& height) {
 #ifdef _WIN32
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -310,7 +319,6 @@ void get_terminal_size(int& width, int& height) {
     if (height < 24) height = 24;
 }
 
-// Representa uma célula da tela virtual
 struct Cell {
     std::string ch = " ";
     std::string fg = Colors::FG_WHITE;
@@ -396,24 +404,114 @@ public:
     }
 };
 
-enum class MenuId {
-    ARQUIVO = 0,
-    HELP = 1
+struct TuiMenuItem {
+    std::string label;
+    std::string shortcut;
+    int id;
 };
+
+struct TuiMenu {
+    std::string title;
+    int x_pos;
+    int width;
+    std::vector<TuiMenuItem> items;
+};
+
+std::vector<TuiMenu> build_tui_menus() {
+    std::vector<TuiMenu> menus;
+
+    TuiMenu m_file;
+    m_file.title = "Arquivo";
+    m_file.x_pos = 1;
+    m_file.width = 9; // " Arquivo "
+    m_file.items = {
+        {"Editor Livre", "F3", 101},
+        {"Sair da TUI", "Alt+X", 102}
+    };
+    menus.push_back(m_file);
+
+    TuiMenu m_opt;
+    m_opt.title = "Opcoes";
+    m_opt.x_pos = 10;
+    m_opt.width = 8; // " Opcoes "
+    m_opt.items = {
+        {"Tema Normal", "F2", 201},
+        {"Tema Invertido", "", 202},
+        {"Tema Claro", "", 203},
+        {"Tema Escuro", "", 204}
+    };
+    menus.push_back(m_opt);
+
+    TuiMenu m_help;
+    m_help.title = "Ajuda";
+    m_help.x_pos = 18;
+    m_help.width = 7; // " Ajuda "
+    m_help.items = {
+        {"Sobre o zx81ide", "F1", 301}
+    };
+    menus.push_back(m_help);
+
+    return menus;
+}
 
 } // anonymous namespace
 
-int run_tui() {
+int run_tui(const std::string& initial_file) {
     setup_console();
 
+    std::string current_file = initial_file.empty() ? "NONAME.BAS" : initial_file;
+    std::string current_theme_name = core::ConfigManager::instance().get_theme();
+    TuiTheme theme = get_tui_theme(current_theme_name);
+
+    // Se arquivo foi informado pela linha de comando, abre editor de imediato
+    if (!initial_file.empty()) {
+        int ret = zx81ide::editor::run_text_editor(current_file, zx81ide::editor::EditorPresentation::TUI_INTEGRATED);
+        if (ret == 1) {
+            restore_console();
+            return 0;
+        }
+        setup_console();
+        current_theme_name = core::ConfigManager::instance().get_theme();
+        theme = get_tui_theme(current_theme_name);
+    }
+
     bool running = true;
-    int current_menu = 0; // 0: Arquivo, 1: Help
-    int menu_item_idx = 0; // Item selecionado no dropdown
+    int current_menu = 0;
+    int menu_item_idx = 0;
     bool menu_open = false;
     bool show_about = false;
 
-    std::string current_theme_name = core::ConfigManager::instance().get_theme();
-    TuiTheme theme = get_tui_theme(current_theme_name);
+    auto menus = build_tui_menus();
+
+    auto execute_action = [&](int action_id) {
+        if (action_id == 101) { // Editor Livre
+            int ret = zx81ide::editor::run_text_editor(current_file, zx81ide::editor::EditorPresentation::TUI_INTEGRATED);
+            if (ret == 1) {
+                running = false;
+            } else {
+                setup_console();
+                current_theme_name = core::ConfigManager::instance().get_theme();
+                theme = get_tui_theme(current_theme_name);
+            }
+        } else if (action_id == 102) { // Sair da TUI
+            running = false;
+        } else if (action_id >= 201 && action_id <= 204) { // Temas
+            std::string next_theme = "normal";
+            if (action_id == 202) next_theme = "invertido";
+            else if (action_id == 203) next_theme = "claro";
+            else if (action_id == 204) next_theme = "escuro";
+
+            core::ConfigManager::instance().set_theme(next_theme);
+            current_theme_name = next_theme;
+            theme = get_tui_theme(current_theme_name);
+        } else if (action_id == 301) { // Sobre
+            show_about = true;
+        }
+    };
+
+#ifdef _WIN32
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
+#endif
 
     while (running) {
         int width = 80;
@@ -424,7 +522,6 @@ int run_tui() {
 
         // -------------------------------------------------------------
         // 1. ÁREA DE DESKTOP (Linhas 1 até height - 2)
-        // Quadriculado ASCII com cores do tema selecionado
         // -------------------------------------------------------------
         for (int y = 1; y < height - 1; ++y) {
             for (int x = 0; x < width; ++x) {
@@ -434,40 +531,28 @@ int run_tui() {
 
         // -------------------------------------------------------------
         // 2. BARRA DE MENU (Linha 0)
-        // Cores configuradas pelo tema ativo
         // -------------------------------------------------------------
         for (int x = 0; x < width; ++x) {
             screen.put_cell(x, 0, " ", theme.menu_bar_fg, theme.menu_bar_bg);
         }
 
-        // Itens de Menu
-        std::string menu_arquivo = " Arquivo ";
-        std::string menu_help    = " Help ";
-
-        int pos_arquivo = 1;
-        int pos_help = 12;
-
-        bool arquivo_active = (current_menu == 0);
-        bool help_active    = (current_menu == 1);
-
-        screen.put_string(pos_arquivo, 0, menu_arquivo,
-            (arquivo_active ? theme.menu_active_fg : theme.menu_bar_fg),
-            (arquivo_active ? theme.menu_active_bg : theme.menu_bar_bg));
-
-        screen.put_string(pos_help, 0, menu_help,
-            (help_active ? theme.menu_active_fg : theme.menu_bar_fg),
-            (help_active ? theme.menu_active_bg : theme.menu_bar_bg));
+        for (size_t m = 0; m < menus.size(); ++m) {
+            bool is_active_menu = (menu_open && (int)m == current_menu);
+            std::string title_str = " " + menus[m].title + " ";
+            screen.put_string(menus[m].x_pos, 0, title_str,
+                (is_active_menu ? theme.menu_active_fg : theme.menu_bar_fg),
+                (is_active_menu ? theme.menu_active_bg : theme.menu_bar_bg));
+        }
 
         // -------------------------------------------------------------
         // 3. BARRA DE STATUS (Última Linha: height - 1)
-        // Fundo e letras conforme o tema com atalhos e versao
         // -------------------------------------------------------------
         int status_y = height - 1;
         for (int x = 0; x < width; ++x) {
             screen.put_cell(x, status_y, " ", theme.status_fg, theme.status_bg);
         }
 
-        std::string shortcuts = " F10:Menu | F3/E:Editor | T:Tema | Setas:Navegar | Enter:Selecionar | Esc:Fechar/Sair ";
+        std::string shortcuts = " F1:Sobre | F2:Tema | F3:Editor | F10:Menu | Alt+X:Sair ";
         screen.put_string(1, status_y, shortcuts, theme.status_fg, theme.status_bg);
 
         std::string version_tag = "| Tema: " + theme.name + " | v" + get_version_string();
@@ -479,55 +564,38 @@ int run_tui() {
         // -------------------------------------------------------------
         // 4. SUBMENU DROPDOWN
         // -------------------------------------------------------------
-        if (menu_open && !show_about) {
-            int drop_w = 22;
-            int inner_w = drop_w - 2; // 20 colunas internas
+        if (menu_open && !show_about && current_menu >= 0 && current_menu < (int)menus.size()) {
+            const auto& cur_menu = menus[current_menu];
+            int drop_x = cur_menu.x_pos;
+            int drop_y = 1;
+            int num_items = (int)cur_menu.items.size();
 
-            if (current_menu == 0) {
-                // Dropdown Arquivo -> [ Editor Livre, Sair ]
-                int drop_x = pos_arquivo;
-                int drop_y = 1;
+            int drop_inner_w = 20;
+            for (const auto& item : cur_menu.items) {
+                int item_len = (int)item.label.size() + (int)item.shortcut.size() + 4;
+                if (item_len > drop_inner_w) drop_inner_w = item_len;
+            }
+            int drop_w = drop_inner_w + 2;
 
-                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", inner_w) + "┐", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 1, "│" + std::string(inner_w, ' ')  + "│", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 2, "│" + std::string(inner_w, ' ')  + "│", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 3, "└" + repeat_utf8("─", inner_w) + "┘", theme.drop_border_fg, theme.drop_border_bg);
+            screen.put_string(drop_x, drop_y, "┌" + repeat_utf8("─", drop_inner_w) + "┐", theme.drop_border_fg, theme.drop_border_bg);
+            for (int i = 0; i < num_items; ++i) {
+                screen.put_string(drop_x, drop_y + 1 + i, "│" + std::string(drop_inner_w, ' ') + "│", theme.drop_border_fg, theme.drop_border_bg);
+                std::string item_str = format_menu_item(cur_menu.items[i].label, cur_menu.items[i].shortcut, drop_inner_w);
+                screen.put_string(drop_x + 1, drop_y + 1 + i, item_str,
+                    (menu_item_idx == i ? theme.drop_sel_fg : theme.drop_item_fg),
+                    (menu_item_idx == i ? theme.drop_sel_bg : theme.drop_item_bg));
 
-                std::string item_edit = format_menu_item("Editor", "F3", inner_w);
-                std::string item_sair = format_menu_item("Sair", "Alt+X", inner_w);
+                // Sombra lateral direita MS-DOS
+                screen.put_cell(drop_x + drop_w, drop_y + 1 + i, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
+                screen.put_cell(drop_x + drop_w + 1, drop_y + 1 + i, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
+            }
+            screen.put_string(drop_x, drop_y + 1 + num_items, "└" + repeat_utf8("─", drop_inner_w) + "┘", theme.drop_border_fg, theme.drop_border_bg);
+            screen.put_cell(drop_x + drop_w, drop_y + 1 + num_items, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
+            screen.put_cell(drop_x + drop_w + 1, drop_y + 1 + num_items, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
 
-                screen.put_string(drop_x + 1, drop_y + 1, item_edit,
-                    (menu_item_idx == 0 ? theme.drop_sel_fg : theme.drop_item_fg),
-                    (menu_item_idx == 0 ? theme.drop_sel_bg : theme.drop_item_bg));
-                screen.put_string(drop_x + 1, drop_y + 2, item_sair,
-                    (menu_item_idx == 1 ? theme.drop_sel_fg : theme.drop_item_fg),
-                    (menu_item_idx == 1 ? theme.drop_sel_bg : theme.drop_item_bg));
-
-                // Sombra MS-DOS (drop shadow)
-                screen.put_cell(drop_x + drop_w, drop_y + 1, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                screen.put_cell(drop_x + drop_w, drop_y + 2, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                screen.put_cell(drop_x + drop_w, drop_y + 3, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                for (int sx = 1; sx <= drop_w; ++sx) {
-                    screen.put_cell(drop_x + sx, drop_y + 4, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                }
-            } else if (current_menu == 1) {
-                // Dropdown Help -> [ About ]
-                int drop_x = pos_help;
-                int drop_y = 1;
-
-                screen.put_string(drop_x, drop_y,     "┌" + repeat_utf8("─", inner_w) + "┐", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 1, "│" + std::string(inner_w, ' ')  + "│", theme.drop_border_fg, theme.drop_border_bg);
-                screen.put_string(drop_x, drop_y + 2, "└" + repeat_utf8("─", inner_w) + "┘", theme.drop_border_fg, theme.drop_border_bg);
-
-                std::string item_about = format_menu_item("About...", "F1", inner_w);
-                screen.put_string(drop_x + 1, drop_y + 1, item_about, theme.drop_sel_fg, theme.drop_sel_bg);
-
-                // Sombra MS-DOS
-                screen.put_cell(drop_x + drop_w, drop_y + 1, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                screen.put_cell(drop_x + drop_w, drop_y + 2, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                for (int sx = 1; sx <= drop_w; ++sx) {
-                    screen.put_cell(drop_x + sx, drop_y + 3, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
-                }
+            // Sombra inferior MS-DOS
+            for (int sx = 2; sx <= drop_w + 1; ++sx) {
+                screen.put_cell(drop_x + sx, drop_y + 2 + num_items, "▒", theme.drop_shadow_fg, theme.drop_shadow_bg);
             }
         }
 
@@ -540,14 +608,12 @@ int run_tui() {
             int dlg_x = (width - dlg_w) / 2;
             int dlg_y = (height - dlg_h) / 2;
 
-            // Fundo da caixa
             for (int dy = 0; dy < dlg_h; ++dy) {
                 for (int dx = 0; dx < dlg_w; ++dx) {
                     screen.put_cell(dlg_x + dx, dlg_y + dy, " ", theme.dlg_text_fg, theme.dlg_body_bg);
                 }
             }
 
-            // Moldura dupla estilo Turbo Vision / MS-DOS
             screen.put_string(dlg_x, dlg_y, "╔" + repeat_utf8("═", dlg_w - 2) + "╗", theme.dlg_border_fg, theme.dlg_border_bg);
             for (int dy = 1; dy < dlg_h - 1; ++dy) {
                 screen.put_cell(dlg_x, dlg_y + dy, "║", theme.dlg_border_fg, theme.dlg_border_bg);
@@ -555,11 +621,9 @@ int run_tui() {
             }
             screen.put_string(dlg_x, dlg_y + dlg_h - 1, "╚" + repeat_utf8("═", dlg_w - 2) + "╝", theme.dlg_border_fg, theme.dlg_border_bg);
 
-            // Título
             std::string title = "[ Sobre o zx81ide ]";
             screen.put_string(dlg_x + (dlg_w - static_cast<int>(title.size())) / 2, dlg_y, title, theme.dlg_title_fg, theme.dlg_title_bg);
 
-            // Conteúdo
             screen.put_string(dlg_x + 3, dlg_y + 2,  "zx81ide - IDE para Sinclair ZX-81 & Clones", theme.dlg_text_fg, theme.dlg_body_bg);
             screen.put_string(dlg_x + 3, dlg_y + 3,  "Linha Sinclair ZX-81, TK82/83/85, CP200, TS1000", theme.dlg_text_dim, theme.dlg_body_bg);
             screen.put_string(dlg_x + 3, dlg_y + 5,  "Versao      : v" + get_version_string(), theme.dlg_text_fg, theme.dlg_body_bg);
@@ -570,11 +634,10 @@ int run_tui() {
             screen.put_string(dlg_x + 3, dlg_y + 11, "Autor       : Wilson \"Barney\" Pilon", theme.dlg_text_fg, theme.dlg_body_bg);
             screen.put_string(dlg_x + 3, dlg_y + 12, "Inspiracao  : fwMSX (github.com/wilsonpilon/fwMSX)", theme.dlg_text_dim, theme.dlg_body_bg);
 
-            // Botão [ OK ]
             std::string ok_btn = " [  OK  ] ";
             screen.put_string(dlg_x + (dlg_w - static_cast<int>(ok_btn.size())) / 2, dlg_y + 14, ok_btn, theme.dlg_btn_fg, theme.dlg_btn_bg);
 
-            // Sombra do diálogo
+            // Sombra do diálogo MS-DOS
             for (int dy = 1; dy <= dlg_h; ++dy) {
                 screen.put_cell(dlg_x + dlg_w, dlg_y + dy, "▒", theme.dlg_shadow_fg, theme.dlg_shadow_bg);
                 screen.put_cell(dlg_x + dlg_w + 1, dlg_y + dy, "▒", theme.dlg_shadow_fg, theme.dlg_shadow_bg);
@@ -584,132 +647,235 @@ int run_tui() {
             }
         }
 
-        // Renderiza o buffer completo na tela
         screen.render();
 
         // -------------------------------------------------------------
-        // 6. PROCESSAMENTO DE ENTRADA DO TECLADO
+        // 6. PROCESSAMENTO DE ENTRADA (TECLADO E MOUSE COM READCONSOLEINPUT)
         // -------------------------------------------------------------
 #ifdef _WIN32
-        int ch = _getch();
-        if (ch == 0 || ch == 224) {
-            int ext = _getch();
-            if (ext == 75) { // Seta Esquerda
-                if (!show_about) {
-                    current_menu = (current_menu == 0) ? 1 : 0;
-                    menu_item_idx = 0;
-                }
-            } else if (ext == 77) { // Seta Direita
-                if (!show_about) {
-                    current_menu = (current_menu == 0) ? 1 : 0;
-                    menu_item_idx = 0;
-                }
-            } else if (ext == 80) { // Seta Abaixo
-                if (!show_about) {
-                    if (menu_open && current_menu == 0) {
-                        menu_item_idx = (menu_item_idx + 1) % 2;
-                    } else {
-                        menu_open = true;
-                        menu_item_idx = 0;
-                    }
-                }
-            } else if (ext == 72) { // Seta Acima
-                if (!show_about && menu_open) {
-                    if (current_menu == 0 && menu_item_idx > 0) {
-                        menu_item_idx--;
-                    } else {
-                        menu_open = false;
-                    }
-                }
-            } else if (ext == 59) { // F1: About
-                show_about = true;
-                menu_open = false;
-            } else if (ext == 60) { // F2: Alternar Tema
-                std::string next_theme = "normal";
-                if (current_theme_name == "normal") next_theme = "invertido";
-                else if (current_theme_name == "invertido") next_theme = "claro";
-                else if (current_theme_name == "claro") next_theme = "escuro";
-                else next_theme = "normal";
+        INPUT_RECORD ir[16];
+        DWORD num_events = 0;
+        if (!ReadConsoleInputW(hIn, ir, 16, &num_events) || num_events == 0) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(15));
+            continue;
+        }
 
-                core::ConfigManager::instance().set_theme(next_theme);
-                current_theme_name = next_theme;
-                theme = get_tui_theme(current_theme_name);
-            } else if (ext == 61) { // F3: Editor Livre
-                menu_open = false;
-                zx81ide::editor::run_text_editor("NONAME.BAS");
-                setup_console();
-            } else if (ext == 68) { // F10: Menu
-                menu_open = !menu_open;
-                menu_item_idx = 0;
-            }
-        } else {
-            if (ch == 27) { // ESC
-                if (show_about) {
-                    show_about = false;
-                } else if (menu_open) {
-                    menu_open = false;
-                } else {
-                    // Sai do modo TUI e retorna
-                    running = false;
+        for (DWORD e = 0; e < num_events; ++e) {
+            auto& rec = ir[e];
+
+            // ---------------------------------------------------------
+            // EVENTOS DE MOUSE
+            // ---------------------------------------------------------
+            if (rec.EventType == MOUSE_EVENT) {
+                COORD mpos = rec.Event.MouseEvent.dwMousePosition;
+                DWORD btn = rec.Event.MouseEvent.dwButtonState;
+
+                if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) {
+                    if (show_about) {
+                        show_about = false;
+                        break;
+                    }
+
+                    // Clique na Barra de Menus Superior (Linha 0)
+                    if (mpos.Y == 0) {
+                        bool clicked_menu = false;
+                        for (size_t m = 0; m < menus.size(); ++m) {
+                            if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                current_menu = (int)m;
+                                menu_item_idx = 0;
+                                menu_open = true;
+                                clicked_menu = true;
+                                break;
+                            }
+                        }
+                        if (!clicked_menu) {
+                            menu_open = false;
+                        }
+                        break;
+                    }
+
+                    // Clique no Submenu Dropdown aberto
+                    if (menu_open && current_menu >= 0 && current_menu < (int)menus.size()) {
+                        const auto& cur_menu = menus[current_menu];
+                        int drop_x = cur_menu.x_pos;
+                        int drop_y = 1;
+                        int num_items = (int)cur_menu.items.size();
+                        int drop_inner_w = 20;
+                        for (const auto& item : cur_menu.items) {
+                            int item_len = (int)item.label.size() + (int)item.shortcut.size() + 4;
+                            if (item_len > drop_inner_w) drop_inner_w = item_len;
+                        }
+                        int drop_w = drop_inner_w + 2;
+
+                        if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
+                            mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
+                            int clicked_idx = mpos.Y - (drop_y + 1);
+                            if (clicked_idx >= 0 && clicked_idx < num_items) {
+                                int act_id = cur_menu.items[clicked_idx].id;
+                                menu_open = false;
+                                execute_action(act_id);
+                                break;
+                            }
+                        } else {
+                            menu_open = false;
+                            break;
+                        }
+                    }
                 }
-            } else if (ch == 13 || ch == 10 || ch == ' ') { // ENTER ou ESPAÇO
+                continue;
+            }
+
+            // ---------------------------------------------------------
+            // EVENTOS DE TECLADO
+            // ---------------------------------------------------------
+            if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown) {
+                WORD vk = rec.Event.KeyEvent.wVirtualKeyCode;
+                WCHAR wc = rec.Event.KeyEvent.uChar.UnicodeChar;
+                DWORD ctrl_state = rec.Event.KeyEvent.dwControlKeyState;
+
+                bool is_alt = (ctrl_state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0;
+                bool is_ctrl = (ctrl_state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
+
                 if (show_about) {
-                    show_about = false;
-                } else if (!menu_open) {
+                    if (vk == VK_ESCAPE || vk == VK_RETURN || vk == VK_SPACE) {
+                        show_about = false;
+                    }
+                    break;
+                }
+
+                // F1: Sobre
+                if (vk == VK_F1) {
+                    execute_action(301);
+                    break;
+                }
+
+                // F2: Alternar tema
+                if (vk == VK_F2) {
+                    std::string next_theme = "normal";
+                    if (current_theme_name == "normal") next_theme = "invertido";
+                    else if (current_theme_name == "invertido") next_theme = "claro";
+                    else if (current_theme_name == "claro") next_theme = "escuro";
+                    else next_theme = "normal";
+
+                    core::ConfigManager::instance().set_theme(next_theme);
+                    current_theme_name = next_theme;
+                    theme = get_tui_theme(current_theme_name);
+                    break;
+                }
+
+                // F3: Editor Livre
+                if (vk == VK_F3) {
+                    menu_open = false;
+                    execute_action(101);
+                    break;
+                }
+
+                // F10: Alternar menu bar
+                if (vk == VK_F10) {
+                    menu_open = !menu_open;
+                    menu_item_idx = 0;
+                    break;
+                }
+
+                // ESC: Fecha menu ou sai da TUI
+                if (vk == VK_ESCAPE) {
+                    if (menu_open) {
+                        menu_open = false;
+                    } else {
+                        running = false;
+                    }
+                    break;
+                }
+
+                // Alt+X ou Ctrl+Q: Sair
+                if ((is_alt && (vk == 'X' || vk == 'x')) || (is_ctrl && (vk == 'Q' || vk == 'q'))) {
+                    running = false;
+                    break;
+                }
+
+                // Alt+A: Arquivo
+                if (is_alt && (vk == 'A' || vk == 'a')) {
+                    current_menu = 0;
                     menu_open = true;
                     menu_item_idx = 0;
-                } else {
-                    if (current_menu == 0) {
-                        if (menu_item_idx == 0) {
-                            // Arquivo -> Editor Livre
-                            menu_open = false;
-                            zx81ide::editor::run_text_editor("NONAME.BAS");
-                            setup_console();
-                        } else if (menu_item_idx == 1) {
-                            // Arquivo -> Sair
-                            running = false;
-                        }
-                    } else if (current_menu == 1) {
-                        // Help -> About
-                        show_about = true;
+                    break;
+                }
+
+                // Alt+O: Opcoes
+                if (is_alt && (vk == 'O' || vk == 'o')) {
+                    current_menu = 1;
+                    menu_open = true;
+                    menu_item_idx = 0;
+                    break;
+                }
+
+                // Alt+J ou Alt+H: Ajuda
+                if (is_alt && (vk == 'J' || vk == 'j' || vk == 'H' || vk == 'h')) {
+                    current_menu = 2;
+                    menu_open = true;
+                    menu_item_idx = 0;
+                    break;
+                }
+
+                // Setas
+                if (vk == VK_LEFT) {
+                    current_menu = (current_menu + (int)menus.size() - 1) % (int)menus.size();
+                    menu_item_idx = 0;
+                    break;
+                } else if (vk == VK_RIGHT) {
+                    current_menu = (current_menu + 1) % (int)menus.size();
+                    menu_item_idx = 0;
+                    break;
+                } else if (vk == VK_DOWN) {
+                    if (!menu_open) {
+                        menu_open = true;
+                        menu_item_idx = 0;
+                    } else {
+                        menu_item_idx = (menu_item_idx + 1) % (int)menus[current_menu].items.size();
+                    }
+                    break;
+                } else if (vk == VK_UP) {
+                    if (menu_open) {
+                        menu_item_idx = (menu_item_idx + (int)menus[current_menu].items.size() - 1) % (int)menus[current_menu].items.size();
+                    }
+                    break;
+                }
+
+                // Enter ou Espaco
+                if (vk == VK_RETURN || vk == VK_SPACE) {
+                    if (!menu_open) {
+                        menu_open = true;
+                        menu_item_idx = 0;
+                    } else {
+                        int act_id = menus[current_menu].items[menu_item_idx].id;
                         menu_open = false;
+                        execute_action(act_id);
+                    }
+                    break;
+                }
+
+                // Teclas diretas
+                if (!menu_open) {
+                    if (wc == 'e' || wc == 'E') {
+                        execute_action(101);
+                        break;
+                    } else if (wc == 't' || wc == 'T') {
+                        std::string next_theme = "normal";
+                        if (current_theme_name == "normal") next_theme = "invertido";
+                        else if (current_theme_name == "invertido") next_theme = "claro";
+                        else if (current_theme_name == "claro") next_theme = "escuro";
+                        else next_theme = "normal";
+
+                        core::ConfigManager::instance().set_theme(next_theme);
+                        current_theme_name = next_theme;
+                        theme = get_tui_theme(current_theme_name);
+                        break;
                     }
                 }
-            } else if (ch == 'e' || ch == 'E') {
-                // Abrir Editor de Texto direto pela tecla E
-                menu_open = false;
-                zx81ide::editor::run_text_editor("NONAME.BAS");
-                setup_console();
-            } else if (ch == 't' || ch == 'T') {
-                // Alternar tema diretamente com a tecla T
-                std::string next_theme = "normal";
-                if (current_theme_name == "normal") next_theme = "invertido";
-                else if (current_theme_name == "invertido") next_theme = "claro";
-                else if (current_theme_name == "claro") next_theme = "escuro";
-                else next_theme = "normal";
-
-                core::ConfigManager::instance().set_theme(next_theme);
-                current_theme_name = next_theme;
-                theme = get_tui_theme(current_theme_name);
-            } else if (ch == 'a' || ch == 'A') {
-                current_menu = 0;
-                menu_open = true;
-                menu_item_idx = 0;
-            } else if (ch == 'h' || ch == 'H') {
-                current_menu = 1;
-                menu_open = true;
-                menu_item_idx = 0;
-            } else if (ch == 's' || ch == 'S') {
-                if (menu_open && current_menu == 0) {
-                    running = false;
-                }
-            } else if (ch == 'x' || ch == 'X' || ch == 'q' || ch == 'Q') {
-                // Atalho rápido para sair
-                running = false;
             }
         }
 #else
-        // Plataformas sem conio.h: aguarda enter básico
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         char c;
         if (std::cin >> c) {
             if (c == 'q' || c == 'x') running = false;

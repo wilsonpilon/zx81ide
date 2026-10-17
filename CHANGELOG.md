@@ -9,6 +9,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.12] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Editor Livre Integrado como Janela Flutuante na TUI (`src/editor/text_editor.cpp`, `src/ui_tui/tui_app.cpp`):**
+  * Em modo TUI (`EditorPresentation::TUI_INTEGRATED` / `zx81ide --tui`), o editor abre como uma janela flutuante centralizada sobre o desktop texturizado (`░░`), preservando margens visíveis em todas as quatro direções em vez de preencher 100% da tela.
+  * Efeito autêntico de sombra projetada (drop shadow) estilo MS-DOS Turbo Vision (`▒▒`) projetado à direita e abaixo da janela sobre o fundo quadriculado do desktop.
+  * Redimensionamento interativo com mouse pelo puxador inferior direito (`◢`), arrasto suave segurando a barra de título superior com o botão esquerdo e suporte a zoom/maximizar (`[▲]` / `[↕]` ou `F5`) alternando perfeitamente entre tamanho flutuante e tela cheia.
+  * Suporte a múltiplos códigos de saída (`return exit_return_code;`):
+    * Fechar a janela (`[×]`, `Ctrl+F4`, `Esc` ou menu `Arquivo -> Fechar Janela`) encerra a edição e retorna ao desktop da TUI sem finalizar o executável.
+    * Sair da TUI (`Alt+X`, `Ctrl+Q` ou menu `Arquivo -> Sair da TUI`) encerra tanto o editor quanto a TUI, retornando diretamente ao console do sistema operacional.
+    * Diálogo modal de confirmação de alterações adaptado dinamicamente: pergunta *"Fechar Janela do Editor"* ao fechar a janela ou *"Salvar e Sair"* ao sair da TUI.
+* **Suporte Completo a Mouse na TUI Desktop (`src/ui_tui/tui_app.cpp`):**
+  * Atualizado o loop principal de eventos da TUI para `ReadConsoleInputW` com modo de console avançado (`ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT | ENABLE_EXTENDED_FLAGS`).
+  * Interação via clique de mouse na barra de menus superior (`Arquivo`, `Opcoes`, `Ajuda`), nos itens dos menus suspensos (dropdowns) e no botão `[ OK ]` da caixa de diálogo *Sobre*.
+  * Suporte a argumento opcional de arquivo no comando `zx81ide --tui <arquivo.bas>` e no comando interativo `tui <arquivo.bas>`, abrindo o editor flutuante imediatamente sobre o desktop.
+
+---
+
 ## [0.1.11] - 2026-10-17
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P"

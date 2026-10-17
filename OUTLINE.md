@@ -221,6 +221,24 @@
   4. Incremento de versão para `v0.1.11` (`Menu bar persistente no editor, correcao do atalho F9 e compilacao automatica ZXText2P`).
   5. Atualização completa de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `MANUAL.md` e `OUTLINE.md`.
 
+### Sessão 13 - 17/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Opção 3 selecionada: "Editor Livre Integrado dentro da TUI: Permitir que o editor abra como uma janela móvel/redimensionável sobre o desktop da TUI (`--tui`), em vez de tomar o console inteiro."
+* **Ações Executadas:**
+  1. Editor Livre Integrado como Janela Flutuante na TUI:
+     * O editor no modo `EditorPresentation::TUI_INTEGRATED` agora inicia como uma janela flutuante centralizada sobre o desktop (`░░`), com margens em todos os quatro cantos, em vez de se expandir automaticamente para 100% da tela.
+     * Renderização de sombra autêntica MS-DOS / Turbo Vision (`▒▒`) no canto inferior e direito da janela sobre o quadriculado do desktop.
+     * Suporte interativo a arrasto da janela pelo cabeçalho superior, redimensionamento com o mouse pelo grip inferior direito (`◢`) e zoom/maximização via botão `[▲]` / `[↕]` ou tecla `F5`.
+     * Distinção de encerramento (`exit_return_code`): Fechar a janela (`[×]`, `Ctrl+F4`, `Esc` ou menu `Arquivo -> Fechar Janela`) retorna 0 e mantém a TUI aberta; Sair da aplicação (`Alt+X`, `Ctrl+Q` ou menu `Arquivo -> Sair da TUI`) retorna 1 e finaliza o programa.
+     * Diálogo de confirmação com texto dinâmico para fechar janela vs salvar e sair.
+  2. Suporte a Mouse e Menus Unificados na TUI Desktop:
+     * O loop de eventos da TUI (`src/ui_tui/tui_app.cpp`) foi atualizado para `ReadConsoleInputW` com modo de console avançado (`ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT | ENABLE_EXTENDED_FLAGS`).
+     * Suporte completo a cliques de mouse na barra de menus superior (`Arquivo`, `Opcoes`, `Ajuda`), itens de submenu dropdown e caixa de diálogo *Sobre*.
+     * Suporte ao parâmetro de arquivo inicial em `run_tui(const std::string& initial_file)` via `zx81ide --tui <arquivo.bas>` ou comando interativo `tui <arquivo.bas>`.
+  3. Incremento de versão para `v0.1.12` (`Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS`).
+  4. Atualização completa de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC
