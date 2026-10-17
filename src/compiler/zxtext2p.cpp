@@ -504,33 +504,77 @@ CompilerResult ZXText2P::compile_source(const std::string& source_code, const Co
 
         // Substituicao de labels @nome -> 100
         if (use_labels) {
-            size_t at_pos = 0;
-            while ((at_pos = line_text.find('@', at_pos)) != std::string::npos) {
-                if (at_pos > 0 && line_text[at_pos - 1] == '\\') {
-                    // Escaped \@ -> ignora
-                    at_pos++;
+            std::string new_line = "";
+            bool in_quotes = false;
+            bool in_rem = false;
+
+            for (size_t p = 0; p < line_text.size(); ) {
+                char c = line_text[p];
+
+                // Detecta strings com aspas
+                if (c == '"') {
+                    in_quotes = !in_quotes;
+                    new_line += c;
+                    p++;
                     continue;
                 }
 
-                // Extrair nome da label
-                size_t end_label = at_pos + 1;
-                while (end_label < line_text.size() && 
-                       (std::isalnum((unsigned char)line_text[end_label]) || line_text[end_label] == '_')) {
-                    end_label++;
+                // Se nao esta em quotes, verifica inicio de REM
+                if (!in_quotes && !in_rem) {
+                    if (p + 3 <= line_text.size()) {
+                        char c0 = (char)std::tolower((unsigned char)line_text[p]);
+                        char c1 = (char)std::tolower((unsigned char)line_text[p + 1]);
+                        char c2 = (char)std::tolower((unsigned char)line_text[p + 2]);
+                        if (c0 == 'r' && c1 == 'e' && c2 == 'm') {
+                            bool left_ok = (p == 0 || !std::isalpha((unsigned char)line_text[p - 1]));
+                            bool right_ok = (p + 3 == line_text.size() || !std::isalpha((unsigned char)line_text[p + 3]));
+                            if (left_ok && right_ok) {
+                                in_rem = true;
+                            }
+                        }
+                    }
                 }
 
-                std::string target_label = line_text.substr(at_pos + 1, end_label - at_pos - 1);
-                auto it = label_map.find(target_label);
-                if (it == label_map.end()) {
-                    result.error_message = "Label indefinida no programa: @" + target_label;
-                    result.error_line = src_line;
-                    return result;
+                // Substituicao de label @nome apenas FORA de quotes e FORA de REM
+                if (!in_quotes && !in_rem && c == '@') {
+                    // Verifica se esta precedido por escape: \@ ou \@@
+                    bool is_escaped = false;
+                    if (p > 0 && line_text[p - 1] == '\\') {
+                        is_escaped = true;
+                    } else if (p > 1 && line_text[p - 1] == '@' && line_text[p - 2] == '\\') {
+                        is_escaped = true;
+                    }
+
+                    // Para ser label valida, deve comecar com letra ou sublinhado
+                    bool valid_ident_start = (p + 1 < line_text.size() && 
+                                              (std::isalpha((unsigned char)line_text[p + 1]) || line_text[p + 1] == '_'));
+
+                    if (!is_escaped && valid_ident_start) {
+                        size_t end_label = p + 1;
+                        while (end_label < line_text.size() && 
+                               (std::isalnum((unsigned char)line_text[end_label]) || line_text[end_label] == '_')) {
+                            end_label++;
+                        }
+
+                        std::string target_label = line_text.substr(p + 1, end_label - p - 1);
+                        auto it = label_map.find(target_label);
+                        if (it == label_map.end()) {
+                            result.error_message = "Label indefinida no programa: @" + target_label;
+                            result.error_line = src_line;
+                            return result;
+                        }
+
+                        std::string num_str = std::to_string(it->second);
+                        new_line += num_str;
+                        p = end_label;
+                        continue;
+                    }
                 }
 
-                std::string num_str = std::to_string(it->second);
-                line_text.replace(at_pos, end_label - at_pos, num_str);
-                at_pos += num_str.size();
+                new_line += c;
+                p++;
             }
+            line_text = new_line;
         }
 
         // Mascara strings e detecta REM

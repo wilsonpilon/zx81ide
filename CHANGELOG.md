@@ -9,6 +9,32 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.15] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Correcao de labels em graficos, bordas alinhadas e Inverter Video no editor"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* **Correção no Pré-processador de Labels do Compilador ZXText2P (`src/compiler/zxtext2p.cpp`):**
+  * Expressões com sequências de escape de caracteres gráficos contendo `@` (como `20 PRINT "\@@Teste"`) agora são compiladas com 100% de fidelidade e sem gerar falso erro de *"Label indefinida no programa: @Teste"*.
+  * O analisador de labels agora processa o código fonte caractere a caractere rastreando escopo de strings literais (`in_quotes`) e comentários `REM` (`in_rem`), ignorando sequências de escape precedidas por barra invertida (`\@`, `\@@`) e exigindo que identificadores válidos de labels comecem obrigatoriamente por letra ou sublinhado (`_`).
+* **Alinhamento Estrito das Bordas de Todas as Caixas de Diálogo (`text_editor.cpp`, `tui_app.cpp`):**
+  * Eliminado o desalinhamento visual na borda lateral direita (`║`) nas caixas de diálogo modais (Inserção de Caracteres Gráficos F4, Confirmação de Saída, Erro de Compilação, Sucesso de Compilação, Ajuda F1, Opções do Compilador F7, Diálogo Sobre) e no diálogo da TUI.
+  * Criada a função `get_visible_width()` para medir a quantidade real de colunas de texto de largura fixa no terminal, desconsiderando códigos ANSI de controle e bytes de continuação UTF-8. Cada linha interna agora calcula dinamicamente o preenchimento exato (`(dlg_w - 2) - vis_w`) de modo que a moldura direita fique 100% reta e milimetricamente alinhada.
+  * Adicionado suporte a `max_chars` no `ScreenBuffer::put_string` da TUI para evitar que strings longas excedam a largura interna do diálogo.
+
+### Adicionado (Added)
+* **Função "Inverter Vídeo" no Menu Editar e Atalho `Ctrl+I` (`src/editor/text_editor.cpp`):**
+  * Adicionada a opção *"Inverter Video"* (`Ctrl+I`) no menu *"Editar"*.
+  * Quando o usuário tem um trecho selecionado em uma string (ou quando o cursor está posicionado dentro de uma string entre aspas `""`), a função insere o prefixo `%` antes de cada caractere comum (deixando intactos escapes como `\"` ou `\::`), fazendo com que o compilador ZXText2P transforme esses caracteres em vídeo invertido (`zx_c | 128`, padrão ZX-81).
+  * Se o texto já estiver completamente invertido com `%`, a execução do comando desinverte a seleção de forma inteligente e reversível.
+* **Seleção Completa de Texto com Mouse e Teclado no Editor:**
+  * Suporte a seleção por arrasto com o mouse na área de texto (`is_mouse_selecting`).
+  * Suporte a seleção por teclado através de combinações com a tecla Shift (`Shift + Setas`, `Shift + Home/End`, `Shift + PgUp/PgDn`).
+  * Tratamento de substituição/exclusão de texto selecionado ao pressionar teclas normais, Backspace, Delete, Enter e Tab, e cancelamento com ESC.
+
+---
+
 ## [0.1.14] - 2026-10-17
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens"

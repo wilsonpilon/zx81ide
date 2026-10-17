@@ -273,7 +273,23 @@
   3. Espera Eficiente com `WaitForSingleObject`:
      * Substituído o loop com polling ativo por espera com timeout (40ms) no handle de entrada do console, reduzindo uso de CPU a 0% em repouso e respondendo instantaneamente a qualquer evento de entrada.
   4. Incremento de versão para `v0.1.14` (`Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens`).
-  5. Atualização de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
+* **Sessão 16 (2026-10-17):**
+* **Foco:** Correção no pré-processador de labels do ZXText2P para caracteres gráficos (`\@@`), alinhamento visual de todas as caixas de diálogo e função de inversão de strings ("Inverter Vídeo" / `Ctrl+I`).
+* **Ações Executadas:**
+  1. Correção de Labels com Caracteres Gráficos em `src/compiler/zxtext2p.cpp`:
+     * O pré-processador agora itera caractere a caractere rastreando escopo de aspas (`in_quotes`) e comentários `REM` (`in_rem`), ignorando sequências de escape precedidas por barra invertida (`\@`, `\@@`) e exigindo que identificadores válidos comecem por letra ou sublinhado.
+     * Comandos como `20 PRINT "\@@Teste"` compilam perfeitamente sem falso erro de label indefinida.
+  2. Alinhamento Monospaçado e Estrito de Todas as Caixas de Diálogo (`src/editor/text_editor.cpp`, `src/ui_tui/tui_app.cpp`):
+     * Criada a função `get_visible_width()` para medir a contagem de colunas visuais no terminal, ignorando sequências ANSI e bytes UTF-8 de continuação.
+     * Substituído o cálculo de preenchimento em todos os 7 modais do editor e na TUI para garantir que a borda direita `║` fique milimetricamente alinhada e reta.
+     * Adicionado suporte a `max_chars` na TUI para prevenir sobreposição de texto sobre a moldura.
+  3. Adição da Função "Inverter Vídeo" no Menu Editar (`Ctrl+I`):
+     * Insere `%` antes de cada caractere comum em seleções ou strings literais sob o cursor para compilação em vídeo reverso do ZX-81, desinvertendo se o texto já estiver no formato invertido.
+  4. Suporte Completo a Seleção de Texto:
+     * Seleção por clique e arrasto do mouse e por teclado com `Shift + Setas / Home / End / PgUp / PgDn`.
+     * Apagamento/substituição imediata de seleção ao digitar caracteres, Backspace, Delete, Enter e Tab.
+  5. Incremento de versão para `v0.1.15` (`Correcao de labels em graficos, bordas alinhadas e Inverter Video no editor`).
+  6. Atualização de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
 
 ---
 

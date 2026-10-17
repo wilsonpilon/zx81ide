@@ -4,6 +4,27 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.15] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.15 [3D Monster Maze] - Correcao de labels em graficos, bordas alinhadas e Inverter Video no editor`
+
+* **Versão:** `0.1.15`
+* **Tag Git:** `v0.1.15`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Correcao de labels em graficos, bordas alinhadas e Inverter Video no editor`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.15.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.15** traz correções críticas no compilador para caracteres gráficos, alinhamento visual perfeito das caixas de diálogo e a função de inversão de vídeo de strings:
+1. **Compilação de Caracteres Gráficos com `@` sem Falso Erro de Label:** Correção no pré-processador do compilador ZXText2P onde comandos como `20 PRINT "\@@Teste"` geravam erro de label inexistente. O analisador agora ignora escapes (`\@`, `\@@`) e protege strings literais (`""`) e comentários `REM`.
+2. **Alinhamento Estrito das Bordas de Todas as Caixas de Diálogo:** Implementada a medição precisa de colunas visuais monospaçadas (`get_visible_width`) em substituição à contagem de bytes. Todas as 7 caixas de diálogo modais do editor e a TUI agora têm a borda direita `║` milimetricamente reta e uniforme.
+3. **Função "Inverter Vídeo" (`Ctrl+I` / Menu Editar):** Adicionada a ferramenta de inversão de strings que insere o prefixo `%` antes de cada caractere comum para compilação em vídeo reverso do ZX-81, além de desinverter caso já esteja no formato invertido.
+4. **Seleção de Texto com Mouse e Teclado:** Suporte a seleção por clique e arrasto do mouse e por teclado com `Shift + Setas`, com substituição direta ao digitar.
+
+---
+
 ## [v0.1.14] - 2026-10-17
 ### Título do Lançamento: `zx81ide v0.1.14 [3D Monster Maze] - Renderizacao de menu sem flicker com atualizacao dirty-checking e redesenho direto de itens`
 

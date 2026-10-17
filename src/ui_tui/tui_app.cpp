@@ -306,14 +306,37 @@ std::string repeat_utf8(const std::string& ch, int count) {
     return result;
 }
 
+int get_visible_width(const std::string& str) {
+    int w = 0;
+    size_t i = 0;
+    while (i < str.size()) {
+        if (str[i] == '\x1b') {
+            i++;
+            if (i < str.size() && str[i] == '[') {
+                i++;
+                while (i < str.size() && (str[i] < '@' || str[i] > '~')) {
+                    i++;
+                }
+                if (i < str.size()) i++;
+            }
+            continue;
+        }
+        unsigned char c = (unsigned char)str[i];
+        if ((c & 0xC0) != 0x80) {
+            w++;
+        }
+        i++;
+    }
+    return w;
+}
+
 std::string format_menu_item(const std::string& label, const std::string& shortcut, int inner_width) {
     std::string text = " " + label;
-    int spaces = inner_width - static_cast<int>(text.size()) - static_cast<int>(shortcut.size()) - 1;
+    int vis_text = get_visible_width(text);
+    int vis_sc = get_visible_width(shortcut);
+    int spaces = inner_width - vis_text - vis_sc - 1;
     if (spaces < 1) spaces = 1;
     text += std::string(spaces, ' ') + shortcut + " ";
-    if (static_cast<int>(text.size()) > inner_width) {
-        text = text.substr(0, inner_width);
-    }
     return text;
 }
 
@@ -359,13 +382,15 @@ public:
         }
     }
 
-    void put_string(int x, int y, const std::string& str, const std::string& fg, const std::string& bg) {
+    void put_string(int x, int y, const std::string& str, const std::string& fg, const std::string& bg, int max_chars = -1) {
         int cur_x = x;
         size_t i = 0;
         size_t len = str.size();
+        int chars_printed = 0;
 
         while (i < len) {
             if (cur_x >= width) break;
+            if (max_chars >= 0 && chars_printed >= max_chars) break;
 
             unsigned char c = static_cast<unsigned char>(str[i]);
             size_t char_bytes = 1;
@@ -388,6 +413,7 @@ public:
             put_cell(cur_x, y, utf8_ch, fg, bg);
 
             cur_x++;
+            chars_printed++;
             i += char_bytes;
         }
     }
@@ -618,7 +644,7 @@ int run_tui(const std::string& initial_file) {
 
             int drop_inner_w = 20;
             for (const auto& item : cur_menu.items) {
-                int item_len = (int)item.label.size() + (int)item.shortcut.size() + 4;
+                int item_len = get_visible_width(item.label) + get_visible_width(item.shortcut) + 4;
                 if (item_len > drop_inner_w) drop_inner_w = item_len;
             }
             int drop_w = drop_inner_w + 2;
@@ -649,7 +675,7 @@ int run_tui(const std::string& initial_file) {
         // 5. CAIXA DE DIÁLOGO MODAL: HELP -> ABOUT
         // -------------------------------------------------------------
         if (show_about) {
-            int dlg_w = 54;
+            int dlg_w = 58;
             int dlg_h = 17;
             int dlg_x = (width - dlg_w) / 2;
             int dlg_y = (height - dlg_h) / 2;
@@ -670,15 +696,16 @@ int run_tui(const std::string& initial_file) {
             std::string title = "[ Sobre o zx81ide ]";
             screen.put_string(dlg_x + (dlg_w - static_cast<int>(title.size())) / 2, dlg_y, title, theme.dlg_title_fg, theme.dlg_title_bg);
 
-            screen.put_string(dlg_x + 3, dlg_y + 2,  "zx81ide - IDE para Sinclair ZX-81 & Clones", theme.dlg_text_fg, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 3,  "Linha Sinclair ZX-81, TK82/83/85, CP200, TS1000", theme.dlg_text_dim, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 5,  "Versao      : v" + get_version_string(), theme.dlg_text_fg, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 6,  "Hardware (X): " + VERSION_MAJOR_NAME, theme.dlg_text_dim, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 7,  "Jogo     (Y): " + VERSION_GAME_CODENAME, theme.dlg_text_dim, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 8,  "Build    (Z): " + VERSION_BUILD_SUBTITLE, theme.dlg_text_dim, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 9,  "Tema Ativo  : " + theme.name + " (SQLite 3)", theme.dlg_text_fg, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 11, "Autor       : Wilson \"Barney\" Pilon", theme.dlg_text_fg, theme.dlg_body_bg);
-            screen.put_string(dlg_x + 3, dlg_y + 12, "Inspiracao  : fwMSX (github.com/wilsonpilon/fwMSX)", theme.dlg_text_dim, theme.dlg_body_bg);
+            int max_text_w = dlg_w - 6;
+            screen.put_string(dlg_x + 3, dlg_y + 2,  "zx81ide - IDE para Sinclair ZX-81 & Clones", theme.dlg_text_fg, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 3,  "Linha Sinclair ZX-81, TK82/83/85, CP200, TS1000", theme.dlg_text_dim, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 5,  "Versao      : v" + get_version_string(), theme.dlg_text_fg, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 6,  "Hardware (X): " + VERSION_MAJOR_NAME, theme.dlg_text_dim, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 7,  "Jogo     (Y): " + VERSION_GAME_CODENAME, theme.dlg_text_dim, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 8,  "Build    (Z): " + VERSION_BUILD_SUBTITLE, theme.dlg_text_dim, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 9,  "Tema Ativo  : " + theme.name + " (SQLite 3)", theme.dlg_text_fg, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 11, "Autor       : Wilson \"Barney\" Pilon", theme.dlg_text_fg, theme.dlg_body_bg, max_text_w);
+            screen.put_string(dlg_x + 3, dlg_y + 12, "Inspiracao  : fwMSX (github.com/wilsonpilon/fwMSX)", theme.dlg_text_dim, theme.dlg_body_bg, max_text_w);
 
             std::string ok_btn = " [  OK  ] ";
             screen.put_string(dlg_x + (dlg_w - static_cast<int>(ok_btn.size())) / 2, dlg_y + 14, ok_btn, theme.dlg_btn_fg, theme.dlg_btn_bg);

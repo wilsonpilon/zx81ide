@@ -384,15 +384,157 @@ std::string repeat_utf8(const std::string& ch, int count) {
     return result;
 }
 
+int get_visible_width(const std::string& str) {
+    int w = 0;
+    size_t i = 0;
+    while (i < str.size()) {
+        if (str[i] == '\x1b') {
+            i++;
+            if (i < str.size() && str[i] == '[') {
+                i++;
+                while (i < str.size() && (str[i] < '@' || str[i] > '~')) {
+                    i++;
+                }
+                if (i < str.size()) i++;
+            }
+            continue;
+        }
+        unsigned char c = (unsigned char)str[i];
+        if ((c & 0xC0) != 0x80) {
+            w++;
+        }
+        i++;
+    }
+    return w;
+}
+
 std::string format_menu_item(const std::string& label, const std::string& shortcut, int inner_width) {
     std::string text = " " + label;
-    int spaces = inner_width - static_cast<int>(text.size()) - static_cast<int>(shortcut.size()) - 1;
+    int vis_text = get_visible_width(text);
+    int vis_sc = get_visible_width(shortcut);
+    int spaces = inner_width - vis_text - vis_sc - 1;
     if (spaces < 1) spaces = 1;
     text += std::string(spaces, ' ') + shortcut + " ";
-    if (static_cast<int>(text.size()) > inner_width) {
-        text = text.substr(0, inner_width);
-    }
     return text;
+}
+
+std::string invert_zx_string(const std::string& input) {
+    if (input.empty()) return "";
+
+    // 1. Verifica se a string ja esta completamente invertida com '%'
+    size_t normal_count = 0;
+    size_t inv_count = 0;
+
+    for (size_t i = 0; i < input.size(); ) {
+        if (input[i] == '%') {
+            inv_count++;
+            i += 2;
+        } else if (input[i] == '\\') {
+            if (i + 1 < input.size() && input[i + 1] == '"') {
+                normal_count++;
+                i += 2;
+            } else if (i + 2 < input.size()) {
+                normal_count++;
+                i += 3;
+            } else {
+                normal_count++;
+                i++;
+            }
+        } else {
+            normal_count++;
+            i++;
+        }
+    }
+
+    // Se todos os caracteres eram invertidos com '%', remove o prefixo '%' (desinverte)
+    if (inv_count > 0 && normal_count == 0) {
+        std::string uninv = "";
+        for (size_t i = 0; i < input.size(); ) {
+            if (input[i] == '%') {
+                if (i + 1 < input.size()) {
+                    uninv += input[i + 1];
+                    i += 2;
+                } else {
+                    i++;
+                }
+            } else {
+                uninv += input[i];
+                i++;
+            }
+        }
+        return uninv;
+    }
+
+    // Caso contrario, insere '%' antes de cada caractere comum
+    std::string result = "";
+    for (size_t i = 0; i < input.size(); ) {
+        if (input[i] == '%') {
+            result += input[i];
+            if (i + 1 < input.size()) {
+                result += input[i + 1];
+                i += 2;
+            } else {
+                i++;
+            }
+        } else if (input[i] == '\\') {
+            if (i + 1 < input.size() && input[i + 1] == '"') {
+                result += input.substr(i, 2);
+                i += 2;
+            } else if (i + 2 < input.size()) {
+                result += input.substr(i, 3);
+                i += 3;
+            } else {
+                result += input[i];
+                i++;
+            }
+        } else {
+            result += '%';
+            result += input[i];
+            i++;
+        }
+    }
+    return result;
+}
+
+inline void render_dialog_top(std::ostringstream& buf, int dlg_x, int dlg_y, int dlg_w, const std::string& title, const EditorTheme& theme) {
+    buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
+    buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔";
+    int inner_w = dlg_w - 2;
+    int title_w = get_visible_width(title);
+    if (title_w > 0) {
+        int total_eq = std::max(0, inner_w - title_w);
+        int left_eq = total_eq / 2;
+        int right_eq = total_eq - left_eq;
+        buf << repeat_utf8("═", left_eq) << title << repeat_utf8("═", right_eq);
+    } else {
+        buf << repeat_utf8("═", inner_w);
+    }
+    buf << "╗";
+}
+
+inline void render_dialog_row(std::ostringstream& buf, int dlg_x, int dlg_y, int dlg_w, const std::string& colored_content, const EditorTheme& theme, bool shadow = true) {
+    buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
+    int vis_w = get_visible_width(colored_content);
+    int inner_w = dlg_w - 2;
+    int pad = std::max(0, inner_w - vis_w);
+    buf << theme.dlg_border_fg << theme.dlg_border_bg << "║"
+        << colored_content
+        << theme.dlg_body_bg << std::string(pad, ' ')
+        << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+    if (shadow) {
+        buf << theme.drop_shadow_fg << theme.drop_shadow_bg << "▒";
+    }
+}
+
+inline void render_dialog_bottom(std::ostringstream& buf, int dlg_x, int dlg_y, int dlg_w, const EditorTheme& theme, bool shadow = true) {
+    buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
+    buf << theme.dlg_border_fg << theme.dlg_border_bg << "╚" << repeat_utf8("═", dlg_w - 2) << "╝";
+    if (shadow) {
+        buf << theme.drop_shadow_fg << theme.drop_shadow_bg << "▒";
+        buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 2) << "H";
+        buf << theme.drop_shadow_fg << theme.drop_shadow_bg << repeat_utf8("▒", dlg_w);
+    }
+    buf << Colors::RESET;
 }
 
 struct MenuItem {
@@ -438,7 +580,8 @@ std::vector<MenuDef> build_editor_menus(EditorPresentation presentation = Editor
     m_edit.x_pos = 11;
     m_edit.width = 8;
     m_edit.items = {
-        { "Caracteres Graficos...", "F4", 201 }
+        { "Caracteres Graficos...", "F4",     201 },
+        { "Inverter Video",         "Ctrl+I", 202 }
     };
     menus.push_back(m_edit);
 
@@ -545,7 +688,7 @@ std::string get_syntax_color(SyntaxTag tag, const EditorTheme& th) {
 }
 
 // Analisa a linha e retorna exatamente inner_w caracteres visiveis com escapes ANSI de cores
-std::string render_editor_line(const std::string& raw_line, int scroll_col, int inner_w, const EditorTheme& theme) {
+std::string render_editor_line(const std::string& raw_line, int scroll_col, int inner_w, const EditorTheme& theme, int sel_c_start = -1, int sel_c_end = -1) {
     std::string expanded = expand_tabs(raw_line);
     size_t N = expanded.size();
     std::vector<SyntaxTag> tags(N, SyntaxTag::NORMAL);
@@ -726,21 +869,40 @@ std::string render_editor_line(const std::string& raw_line, int scroll_col, int 
     // 5. Renderizacao estrita em inner_w colunas visiveis
     std::ostringstream out;
     SyntaxTag cur_tag = SyntaxTag::NORMAL;
+    bool was_sel = false;
     out << theme.text_fg << theme.text_bg;
 
     for (int col = 0; col < inner_w; ++col) {
         int doc_idx = scroll_col + col;
-        if (doc_idx < (int)N) {
-            SyntaxTag t = tags[doc_idx];
-            if (t != cur_tag) {
-                cur_tag = t;
+        bool is_sel = (sel_c_start >= 0 && doc_idx >= sel_c_start && doc_idx < sel_c_end);
+
+        if (is_sel) {
+            if (!was_sel) {
+                out << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg;
+                was_sel = true;
+            }
+        } else {
+            if (was_sel) {
                 out << get_syntax_color(cur_tag, theme);
+                was_sel = false;
+            }
+        }
+
+        if (doc_idx < (int)N) {
+            if (!is_sel) {
+                SyntaxTag t = tags[doc_idx];
+                if (t != cur_tag) {
+                    cur_tag = t;
+                    out << get_syntax_color(cur_tag, theme);
+                }
             }
             out << expanded[doc_idx];
         } else {
-            if (cur_tag != SyntaxTag::NORMAL) {
-                cur_tag = SyntaxTag::NORMAL;
-                out << theme.text_fg << theme.text_bg;
+            if (!is_sel) {
+                if (cur_tag != SyntaxTag::NORMAL) {
+                    cur_tag = SyntaxTag::NORMAL;
+                    out << theme.text_fg << theme.text_bg;
+                }
             }
             out << ' ';
         }
@@ -837,6 +999,14 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     bool exit_dlg_is_close_window = false;
     std::string status_msg = is_new_file ? "[ Novo Arquivo ]" : "[ Arquivo Carregado ]";
     auto status_msg_time = std::chrono::steady_clock::now();
+
+    // Estado de Selecao de Texto
+    bool has_selection = false;
+    int sel_start_row = 0;
+    int sel_start_col = 0;
+    int sel_end_row = 0;
+    int sel_end_col = 0;
+    bool is_mouse_selecting = false;
 
     // Dimensoes da janela
     int term_w = 80;
@@ -950,6 +1120,95 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             }
         } else if (action_id == 201) { // Caracteres Graficos
             show_graphics_modal = true;
+        } else if (action_id == 202) { // Inverter Video ZX-81 (%)
+            bool inverted_something = false;
+
+            if (has_selection) {
+                int r1 = sel_start_row, c1 = sel_start_col;
+                int r2 = sel_end_row, c2 = sel_end_col;
+                if (r1 > r2 || (r1 == r2 && c1 > c2)) {
+                    std::swap(r1, r2);
+                    std::swap(c1, c2);
+                }
+
+                for (int r = r1; r <= r2 && r < (int)lines.size(); ++r) {
+                    int line_sz = (int)lines[r].size();
+                    int from_c = (r == r1) ? c1 : 0;
+                    int to_c = (r == r2) ? c2 : line_sz;
+                    from_c = std::max(0, std::min(line_sz, from_c));
+                    to_c = std::max(from_c, std::min(line_sz, to_c));
+
+                    if (from_c < to_c) {
+                        std::string target = lines[r].substr(from_c, to_c - from_c);
+                        std::string transformed = invert_zx_string(target);
+                        lines[r].replace(from_c, to_c - from_c, transformed);
+                        inverted_something = true;
+                        if (r == r2) {
+                            cursor_col = from_c + (int)transformed.size();
+                        }
+                    }
+                }
+                has_selection = false;
+            } else {
+                if (cursor_row >= 0 && cursor_row < (int)lines.size()) {
+                    std::string& cur_line = lines[cursor_row];
+                    int best_start = -1;
+                    int best_end = -1;
+                    bool in_q = false;
+                    int q_start = -1;
+
+                    for (int i = 0; i < (int)cur_line.size(); ++i) {
+                        if (cur_line[i] == '"') {
+                            if (!in_q) {
+                                in_q = true;
+                                q_start = i;
+                            } else {
+                                in_q = false;
+                                int q_end = i;
+                                if (cursor_col >= q_start && cursor_col <= q_end + 1) {
+                                    best_start = q_start + 1;
+                                    best_end = q_end;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (best_start != -1 && best_end >= best_start) {
+                        std::string target = cur_line.substr(best_start, best_end - best_start);
+                        std::string transformed = invert_zx_string(target);
+                        cur_line.replace(best_start, best_end - best_start, transformed);
+                        inverted_something = true;
+                        cursor_col = best_start + (int)transformed.size();
+                    } else {
+                        // Palavra sob o cursor
+                        int w_start = cursor_col;
+                        while (w_start > 0 && !std::isspace((unsigned char)cur_line[w_start - 1]) && cur_line[w_start - 1] != '"') {
+                            w_start--;
+                        }
+                        int w_end = cursor_col;
+                        while (w_end < (int)cur_line.size() && !std::isspace((unsigned char)cur_line[w_end]) && cur_line[w_end] != '"') {
+                            w_end++;
+                        }
+                        if (w_end > w_start) {
+                            std::string target = cur_line.substr(w_start, w_end - w_start);
+                            std::string transformed = invert_zx_string(target);
+                            cur_line.replace(w_start, w_end - w_start, transformed);
+                            inverted_something = true;
+                            cursor_col = w_start + (int)transformed.size();
+                        }
+                    }
+                }
+            }
+
+            if (inverted_something) {
+                modified = true;
+                status_msg = "[ Texto invertido com sucesso (prefixo '%' ZX-81) ]";
+                status_msg_time = std::chrono::steady_clock::now();
+            } else {
+                status_msg = "[ Posicione o cursor dentro de uma string \"...\" ou selecione o texto ]";
+                status_msg_time = std::chrono::steady_clock::now();
+            }
         } else if (action_id == 301) { // Compilar para .P (ZX-81)
             // 1. Auto-salva arquivo fonte .BAS primeiro
             {
@@ -1034,7 +1293,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
         int drop_y = 1;
         int drop_inner_w = 26;
         for (const auto& it : cur_menu.items) {
-            int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+            int len = get_visible_width(it.label) + get_visible_width(it.shortcut) + 4;
             if (len > drop_inner_w) drop_inner_w = len;
         }
         int num_items = (int)cur_menu.items.size();
@@ -1212,9 +1471,23 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
                     buf << theme.frame_fg << theme.frame_bg << "║";
 
-                    // Renderizacao da linha com Destaque de Sintaxe
+                    // Renderizacao da linha com Destaque de Sintaxe e Selecao
                     if (doc_line_idx < (int)lines.size()) {
-                        buf << render_editor_line(lines[doc_line_idx], scroll_col, inner_w, theme);
+                        int sel_c_start = -1;
+                        int sel_c_end = -1;
+                        if (has_selection) {
+                            int r1 = sel_start_row, c1 = sel_start_col;
+                            int r2 = sel_end_row, c2 = sel_end_col;
+                            if (r1 > r2 || (r1 == r2 && c1 > c2)) {
+                                std::swap(r1, r2);
+                                std::swap(c1, c2);
+                            }
+                            if (doc_line_idx >= r1 && doc_line_idx <= r2) {
+                                sel_c_start = (doc_line_idx == r1) ? c1 : 0;
+                                sel_c_end = (doc_line_idx == r2) ? c2 : (int)lines[doc_line_idx].size();
+                            }
+                        }
+                        buf << render_editor_line(lines[doc_line_idx], scroll_col, inner_w, theme, sel_c_start, sel_c_end);
                     } else {
                         buf << theme.text_fg << theme.text_bg << std::string(inner_w, ' ');
                     }
@@ -1354,7 +1627,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             int drop_y = 1; // Linha logo abaixo da barra de menus
             int drop_inner_w = 26;
             for (const auto& it : cur_menu.items) {
-                int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+                int len = get_visible_width(it.label) + get_visible_width(it.shortcut) + 4;
                 if (len > drop_inner_w) drop_inner_w = len;
             }
             int drop_w = drop_inner_w + 2;
@@ -1394,39 +1667,33 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
         // 1. MODAL DE CONFIRMACAO DE SAIDA
         if (show_exit_dlg) {
-            int dlg_w = 46;
+            int dlg_w = 48;
             int dlg_h = 7;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔════════════════════════════════════════════╗";
+            std::string dlg_title = exit_dlg_is_close_window ? "[ Fechar Janela ]" : "[ Salvar e Sair ]";
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, dlg_title, theme);
 
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            std::string dlg_hdr = exit_dlg_is_close_window ? "        Fechar Janela do Editor             " 
-                                                           : "               Salvar e Sair                ";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << dlg_hdr << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            std::string header_txt = exit_dlg_is_close_window ? "        Fechar Janela do Editor" 
+                                                              : "               Salvar e Sair";
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + header_txt, theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  O arquivo foi modificado. Salvar agora?", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, "", theme);
 
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  O arquivo foi modificado. Salvar agora?   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            std::string btn_line = "  ";
+            if (exit_dlg_choice == 0) btn_line += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + "[ Sim (S) ]" + theme.dlg_body_bg;
+            else btn_line += theme.dlg_btn_fg + theme.dlg_btn_bg + "[ Sim (S) ]" + theme.dlg_body_bg;
+            btn_line += "  ";
+            if (exit_dlg_choice == 1) btn_line += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + "[ Nao (N) ]" + theme.dlg_body_bg;
+            else btn_line += theme.dlg_btn_fg + theme.dlg_btn_bg + "[ Nao (N) ]" + theme.dlg_body_bg;
+            btn_line += "  ";
+            if (exit_dlg_choice == 2) btn_line += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + "[ Cancelar (C) ]" + theme.dlg_body_bg;
+            else btn_line += theme.dlg_btn_fg + theme.dlg_btn_bg + "[ Cancelar (C) ]" + theme.dlg_body_bg;
 
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                            " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "   ";
-            if (exit_dlg_choice == 0) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << "[ Sim (S) ]";
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << "[ Sim (S) ]";
-            buf << theme.dlg_body_bg << "  ";
-            if (exit_dlg_choice == 1) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << "[ Nao (N) ]";
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << "[ Nao (N) ]";
-            buf << theme.dlg_body_bg << "  ";
-            if (exit_dlg_choice == 2) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << "[ Cancelar (C) ]";
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << "[ Cancelar (C) ]";
-            buf << theme.dlg_body_bg << "   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
-            buf << "╚════════════════════════════════════════════╝" << Colors::RESET;
+            render_dialog_row(buf, dlg_x, dlg_y + 4, dlg_w, btn_line, theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 5, dlg_w, "", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 6, dlg_w, theme);
         }
 
         // 2. MODAL SELETOR DE CARACTERES GRAFICOS (F4 / Ctrl+G)
@@ -1436,179 +1703,130 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔═════════[ Caracteres Graficos do ZX-81 (F4) ]═════════╗";
-
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << " Navegue com as setas e tecle Enter para inserir o escape:   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Caracteres Graficos do ZX-81 (F4) ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + " Navegue com as setas e tecle Enter para inserir o escape:", theme);
 
             for (int row = 0; row < 12; ++row) {
                 int idx1 = row;
                 int idx2 = row + 12;
 
-                buf << "\x1b[" << (dlg_y + 3 + row) << ";" << (dlg_x + 1) << "H";
-                buf << "║" << theme.dlg_body_bg << " ";
+                std::string row_str = " ";
 
                 // Coluna 1
                 if (idx1 < (int)gfx_table.size()) {
                     bool sel1 = (graphics_sel_idx == idx1);
                     std::string label1 = " [" + gfx_table[idx1].glyph_utf8 + "] " + gfx_table[idx1].escape_seq + " ";
-                    if (label1.size() < 12) label1.append(12 - label1.size(), ' ');
+                    int v_w = get_visible_width(label1);
+                    if (v_w < 12) label1.append(12 - v_w, ' ');
 
-                    if (sel1) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << label1 << theme.dlg_body_bg;
-                    else buf << theme.dlg_text_fg << label1;
+                    if (sel1) row_str += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + label1 + theme.dlg_body_bg;
+                    else row_str += theme.dlg_text_fg + theme.dlg_body_bg + label1;
                 } else {
-                    buf << std::string(12, ' ');
+                    row_str += std::string(12, ' ');
                 }
 
-                buf << "   │  ";
+                row_str += "   │  ";
 
                 // Coluna 2
                 if (idx2 < (int)gfx_table.size()) {
                     bool sel2 = (graphics_sel_idx == idx2);
                     std::string label2 = " [" + gfx_table[idx2].glyph_utf8 + "] " + gfx_table[idx2].escape_seq + " ";
-                    if (label2.size() < 12) label2.append(12 - label2.size(), ' ');
+                    int v_w = get_visible_width(label2);
+                    if (v_w < 12) label2.append(12 - v_w, ' ');
 
-                    if (sel2) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << label2 << theme.dlg_body_bg;
-                    else buf << theme.dlg_text_fg << label2;
+                    if (sel2) row_str += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + label2 + theme.dlg_body_bg;
+                    else row_str += theme.dlg_text_fg + theme.dlg_body_bg + label2;
                 } else {
-                    buf << std::string(12, ' ');
+                    row_str += std::string(12, ' ');
                 }
 
-                buf << "        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+                render_dialog_row(buf, dlg_x, dlg_y + 2 + row, dlg_w, row_str, theme);
             }
 
             // Linha com descricao do selecionado
             std::string desc_line = " " + gfx_table[graphics_sel_idx].description + 
                                     " (ZX: " + std::to_string(gfx_table[graphics_sel_idx].zx_code) + ") ";
-            if ((int)desc_line.size() > dlg_w - 4) desc_line = desc_line.substr(0, dlg_w - 4);
-            int desc_pad = (dlg_w - 2) - (int)desc_line.size();
+            int max_desc_w = dlg_w - 4;
+            if (get_visible_width(desc_line) > max_desc_w) {
+                desc_line = desc_line.substr(0, max_desc_w);
+            }
+            render_dialog_row(buf, dlg_x, dlg_y + 14, dlg_w, theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + desc_line + theme.dlg_body_bg, theme);
 
-            buf << "\x1b[" << (dlg_y + 15) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << desc_line 
-                << theme.dlg_body_bg << std::string(std::max(0, desc_pad), ' ') << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 16) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "    [ Enter: Inserir no Editor ]        [ Esc: Cancelar ]    " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 17) << ";" << (dlg_x + 1) << "H";
-            buf << "╚══════════════════════════════════════════════════════════╝" << Colors::RESET;
+            render_dialog_row(buf, dlg_x, dlg_y + 15, dlg_w, theme.dlg_body_bg + "    [ Enter: Inserir no Editor ]        [ Esc: Cancelar ]", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 16, dlg_w, theme);
         }
 
         // 3. MODAL DE ERRO DE COMPILACAO
         if (show_compile_error_modal) {
             int dlg_w = 60;
-            int dlg_h = 8;
+            int dlg_h = 7;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔══════════[ Erro de Compilacao ZXText2P ]══════════╗";
-
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Falha ao gerar binario .P do Sinclair ZX-81:          " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Erro de Compilacao ZXText2P ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Falha ao gerar binario .P do Sinclair ZX-81:", theme);
 
             std::string err_line_str = "  Linha " + std::to_string(compile_error_line) + ": " + compile_error_msg;
-            if ((int)err_line_str.size() > dlg_w - 4) err_line_str = err_line_str.substr(0, dlg_w - 4);
-            int err_pad = (dlg_w - 2) - (int)err_line_str.size();
-
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << err_line_str << theme.dlg_body_bg << std::string(std::max(0, err_pad), ' ') << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                          " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "      [ Enter / Esc: Ir ate a Linha do Erro ]             " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
-            buf << "╚══════════════════════════════════════════════════════════╝" << Colors::RESET;
+            int max_err_w = dlg_w - 4;
+            if (get_visible_width(err_line_str) > max_err_w) {
+                err_line_str = err_line_str.substr(0, max_err_w);
+            }
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + err_line_str + theme.dlg_body_bg, theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, "", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 4, dlg_w, theme.dlg_body_bg + "      [ Enter / Esc: Ir ate a Linha do Erro ]", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 5, dlg_w, theme);
         }
 
         // 4. MODAL DE SUCESSO DE COMPILACAO
         if (show_compile_success_modal) {
             int dlg_w = 58;
-            int dlg_h = 7;
+            int dlg_h = 6;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔═════════[ Compilacao Concluida (.P) ]═════════╗";
-
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Programa compilado e salvo com sucesso em formato .P! " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Compilacao Concluida (.P) ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Programa compilado e salvo com sucesso em formato .P!", theme);
 
             std::string succ_line = "  " + compile_success_msg;
-            if ((int)succ_line.size() > dlg_w - 4) succ_line = succ_line.substr(0, dlg_w - 4);
-            int succ_pad = (dlg_w - 2) - (int)succ_line.size();
-
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << succ_line << std::string(std::max(0, succ_pad), ' ') << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "              [ Enter / Espaco / Esc: OK ]            " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "╚════════════════════════════════════════════════════════╝" << Colors::RESET;
+            int max_succ_w = dlg_w - 4;
+            if (get_visible_width(succ_line) > max_succ_w) {
+                succ_line = succ_line.substr(0, max_succ_w);
+            }
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + succ_line, theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, theme.dlg_body_bg + "              [ Enter / Espaco / Esc: OK ]", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 4, dlg_w, theme);
         }
 
         // 5. MODAL DE AJUDA DO EDITOR (F1)
         if (show_help_modal) {
-            int dlg_w = 62;
-            int dlg_h = 16;
+            int dlg_w = 66;
+            int dlg_h = 17;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔═════════════[ Ajuda do Editor ZX-81 (F1) ]═════════════╗";
-
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Atalhos Principais do Editor de Texto:                    " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F1          : Exibe esta tela de ajuda                  " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F2 / Ctrl+S : Salva o arquivo ASCII (.BAS) no disco     " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F4 / Ctrl+G : Seletor de Caracteres Graficos do ZX-81   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F5          : Maximiza / Restaura tamanho da janela     " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 7) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F7 / Ctrl+T : Configuracoes do Compilador ZXText2P      " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 8) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F9 / Ctrl+B : Compila o fonte para binario ZX-81 (.P)   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 9) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    F10 / Alt+M : Ativa e foca a Barra de Menus superior    " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 10) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "    Esc / Alt+X : Encerra e fecha a janela do editor        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 11) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                            " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 12) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Recursos: Destaque de sintaxe, suporte completo a mouse   " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 13) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  e menus padrao Turbo C++ / MS-DOS.                        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 14) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "               [ Pressione Enter ou Esc para Fechar ]         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 15) << ";" << (dlg_x + 1) << "H";
-            buf << "╚════════════════════════════════════════════════════════════╝" << Colors::RESET;
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Ajuda do Editor ZX-81 (F1) ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Atalhos Principais do Editor de Texto:", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F1          : Exibe esta tela de ajuda", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F2 / Ctrl+S : Salva o arquivo ASCII (.BAS) no disco", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 4, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    Ctrl+I      : Inverte texto selecionado / string (Video Inverso %)", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 5, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F4 / Ctrl+G : Seletor de Caracteres Graficos do ZX-81", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 6, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F5          : Maximiza / Restaura tamanho da janela", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 7, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F7 / Ctrl+T : Configuracoes do Compilador ZXText2P", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 8, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F9 / Ctrl+B : Compila o fonte para binario ZX-81 (.P)", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 9, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    F10 / Alt+M : Ativa e foca a Barra de Menus superior", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 10, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "    Esc / Alt+X : Encerra e fecha a janela do editor", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 11, dlg_w, "", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 12, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Recursos: Destaque de sintaxe, suporte completo a mouse", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 13, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  e menus padrao Turbo C++ / MS-DOS.", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 14, dlg_w, "", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 15, dlg_w, theme.dlg_body_bg + "               [ Pressione Enter ou Esc para Fechar ]", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 16, dlg_w, theme);
         }
 
         // 6. MODAL DE OPCOES DO COMPILADOR (F7 / Ctrl+T)
         if (show_compiler_opts_modal) {
             int dlg_w = 56;
-            int dlg_h = 10;
+            int dlg_h = 9;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
@@ -1616,81 +1834,54 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
             int start_line = cfg.get_compiler_start_line();
             int line_inc = cfg.get_compiler_line_increment();
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔════════[ Parametros do Compilador ZXText2P ]════════╗";
-
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Altere com Setas / Espaco e tecle Enter para gravar:  " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Parametros do Compilador ZXText2P ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Altere com Setas / Espaco e tecle Enter para gravar:", theme);
 
             // Opcao 0: Modo Labels
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "    Modo Labels (@label): ";
+            std::string row0 = theme.dlg_body_bg + "    Modo Labels (@label): ";
             std::string lbl_val = labels_mode ? "[ Ativado (Sim) ]" : "[ Auto-Deteccao ]";
-            if (compiler_opts_focus == 0) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << lbl_val << theme.dlg_body_bg;
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << lbl_val;
-            buf << "      " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            if (compiler_opts_focus == 0) row0 += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + lbl_val + theme.dlg_body_bg;
+            else row0 += theme.dlg_btn_fg + theme.dlg_btn_bg + lbl_val + theme.dlg_body_bg;
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, row0, theme);
 
             // Opcao 1: Linha Inicial
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "    Linha Inicial (-s)  : ";
+            std::string row1 = theme.dlg_body_bg + "    Linha Inicial (-s)  : ";
             std::string s_val = "< " + std::to_string(start_line) + " >";
-            if (compiler_opts_focus == 1) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << s_val << theme.dlg_body_bg;
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << s_val;
-            buf << "                  " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            if (compiler_opts_focus == 1) row1 += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + s_val + theme.dlg_body_bg;
+            else row1 += theme.dlg_btn_fg + theme.dlg_btn_bg + s_val + theme.dlg_body_bg;
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, row1, theme);
 
             // Opcao 2: Incremento
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "    Incremento    (-i)  : ";
+            std::string row2 = theme.dlg_body_bg + "    Incremento    (-i)  : ";
             std::string i_val = "< " + std::to_string(line_inc) + " >";
-            if (compiler_opts_focus == 2) buf << theme.dlg_btn_sel_fg << theme.dlg_btn_sel_bg << i_val << theme.dlg_body_bg;
-            else buf << theme.dlg_btn_fg << theme.dlg_btn_bg << i_val;
-            buf << "                  " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
+            if (compiler_opts_focus == 2) row2 += theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + i_val + theme.dlg_body_bg;
+            else row2 += theme.dlg_btn_fg + theme.dlg_btn_bg + i_val + theme.dlg_body_bg;
+            render_dialog_row(buf, dlg_x, dlg_y + 4, dlg_w, row2, theme);
 
-            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "                                                        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 7) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "           [ Enter: Salvar ]        [ Esc: Fechar ]     " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-
-            buf << "\x1b[" << (dlg_y + 8) << ";" << (dlg_x + 1) << "H";
-            buf << "╚══════════════════════════════════════════════════════╝" << Colors::RESET;
+            render_dialog_row(buf, dlg_x, dlg_y + 5, dlg_w, "", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 6, dlg_w, theme.dlg_body_bg + "           [ Enter: Salvar ]        [ Esc: Fechar ]", theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 7, dlg_w, theme);
         }
 
         // 7. MODAL SOBRE (About)
         if (show_about_modal) {
-            int dlg_w = 54;
+            int dlg_w = 56;
             int dlg_h = 13;
             int dlg_x = std::max(0, (term_w - dlg_w) / 2);
             int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-            buf << "\x1b[" << (dlg_y + 1) << ";" << (dlg_x + 1) << "H";
-            buf << theme.dlg_border_fg << theme.dlg_border_bg << "╔═════════════[ Sobre o zx81ide ]═════════════╗";
-            buf << "\x1b[" << (dlg_y + 2) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  zx81ide - IDE para Sinclair ZX-81 & Clones         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 3) << ";" << (dlg_x + 1) << "H";
-            std::string ver_line = "  Versao      : v" + get_version_string();
-            if (ver_line.size() < 51) ver_line.append(51 - ver_line.size(), ' ');
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << ver_line << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 4) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Hardware (X): Sinclair ZX81 (Foundation)          " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 5) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Jogo     (Y): 3D Monster Maze                      " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 6) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Compilador  : ZXText2P C++ Nativo Embutido         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 7) << ";" << (dlg_x + 1) << "H";
-            std::string theme_line = "  Tema Ativo  : " + theme_name + " (SQLite 3)";
-            if (theme_line.size() < 51) theme_line.append(51 - theme_line.size(), ' ');
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << theme_line << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 8) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Autor       : Wilson \"Barney\" Pilon                " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 9) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "  Inspiracao  : fwMSX (Basic Dignified Suite)        " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 10) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_text_fg << theme.dlg_body_bg << "                                                     " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 11) << ";" << (dlg_x + 1) << "H";
-            buf << "║" << theme.dlg_body_bg << "                     [  OK  ]                         " << theme.dlg_border_fg << theme.dlg_border_bg << "║";
-            buf << "\x1b[" << (dlg_y + 12) << ";" << (dlg_x + 1) << "H";
-            buf << "╚════════════════════════════════════════════════════╝" << Colors::RESET;
+            render_dialog_top(buf, dlg_x, dlg_y, dlg_w, "[ Sobre o zx81ide ]", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 1, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  zx81ide - IDE para Sinclair ZX-81 & Clones", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 2, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Versao      : v" + get_version_string(), theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 3, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Hardware (X): Sinclair ZX81 (Foundation)", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 4, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Jogo     (Y): 3D Monster Maze", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 5, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Compilador  : ZXText2P C++ Nativo Embutido", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 6, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Tema Ativo  : " + theme_name + " (SQLite 3)", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 7, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Autor       : Wilson \"Barney\" Pilon", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 8, dlg_w, theme.dlg_text_fg + theme.dlg_body_bg + "  Inspiracao  : fwMSX (Basic Dignified Suite)", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 9, dlg_w, "", theme);
+            render_dialog_row(buf, dlg_x, dlg_y + 10, dlg_w, theme.dlg_btn_sel_fg + theme.dlg_btn_sel_bg + "                    [  OK (Enter/Esc)  ]" + theme.dlg_body_bg, theme);
+            render_dialog_bottom(buf, dlg_x, dlg_y + 11, dlg_w, theme);
         }
 
         // Posicionar cursor real do console na posicao de digitacao
@@ -1779,6 +1970,13 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     is_resizing = false;
                     needs_render = true;
                 }
+                if (is_mouse_selecting) {
+                    is_mouse_selecting = false;
+                    if (sel_start_row == sel_end_row && sel_start_col == sel_end_col) {
+                        has_selection = false;
+                    }
+                    needs_render = true;
+                }
             }
 
             // 3. Movimentacao do Mouse (MOUSE_MOVED)
@@ -1842,6 +2040,24 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             }
                         }
                     }
+                } else if (is_mouse_selecting && left_down) {
+                    if (mpos.Y > win_y && mpos.Y < win_y + win_h - 1 &&
+                        mpos.X > win_x && mpos.X < win_x + win_w - 1) {
+                        int r = scroll_row + (mpos.Y - win_y - 1);
+                        int c = scroll_col + (mpos.X - win_x - 1);
+                        r = std::max(0, std::min((int)lines.size() - 1, r));
+                        int line_sz = (int)lines[r].size();
+                        c = std::max(0, std::min(line_sz, c));
+
+                        sel_end_row = r;
+                        sel_end_col = c;
+                        cursor_row = r;
+                        cursor_col = c;
+                        has_selection = (sel_start_row != sel_end_row || sel_start_col != sel_end_col);
+                        needs_render = true;
+                    }
+                    prev_btn_state = btn;
+                    break;
                 }
             }
 
@@ -2083,7 +2299,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         break;
                     }
 
-                    // J. Clique no texto (posiciona cursor)
+                    // J. Clique no texto (posiciona cursor e inicia selecao)
                     if (mpos.Y > win_y && mpos.Y < win_y + win_h - 1 &&
                         mpos.X > win_x && mpos.X < win_x + win_w - 1) {
                         int click_r = scroll_row + (mpos.Y - win_y - 1);
@@ -2091,6 +2307,14 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         cursor_row = std::max(0, std::min((int)lines.size() - 1, click_r));
                         int target_line_len = (int)lines[cursor_row].size();
                         cursor_col = std::max(0, std::min(target_line_len, click_c));
+
+                        has_selection = false;
+                        is_mouse_selecting = true;
+                        sel_start_row = cursor_row;
+                        sel_start_col = cursor_col;
+                        sel_end_row = cursor_row;
+                        sel_end_col = cursor_col;
+
                         prev_btn_state = btn;
                         break;
                     }
@@ -2111,6 +2335,39 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
                 bool is_ctrl = (ctrl_state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
                 bool is_alt  = (ctrl_state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)) != 0;
+                bool is_shift = (ctrl_state & SHIFT_PRESSED) != 0;
+
+                auto delete_selection = [&]() -> bool {
+                    if (!has_selection) return false;
+                    int r1 = sel_start_row, c1 = sel_start_col;
+                    int r2 = sel_end_row, c2 = sel_end_col;
+                    if (r1 > r2 || (r1 == r2 && c1 > c2)) {
+                        std::swap(r1, r2);
+                        std::swap(c1, c2);
+                    }
+                    if (r1 < 0) r1 = 0;
+                    if (r1 >= (int)lines.size()) r1 = (int)lines.size() - 1;
+                    if (r2 < 0) r2 = 0;
+                    if (r2 >= (int)lines.size()) r2 = (int)lines.size() - 1;
+                    c1 = std::max(0, std::min((int)lines[r1].size(), c1));
+                    c2 = std::max(0, std::min((int)lines[r2].size(), c2));
+
+                    if (r1 == r2) {
+                        if (c1 < c2) {
+                            lines[r1].erase(c1, c2 - c1);
+                        }
+                    } else {
+                        std::string prefix = lines[r1].substr(0, c1);
+                        std::string suffix = lines[r2].substr(c2);
+                        lines[r1] = prefix + suffix;
+                        lines.erase(lines.begin() + r1 + 1, lines.begin() + r2 + 1);
+                    }
+                    cursor_row = r1;
+                    cursor_col = c1;
+                    has_selection = false;
+                    modified = true;
+                    return true;
+                };
 
                 // 1. Popup de salvamento
                 if (show_exit_dlg) {
@@ -2321,6 +2578,12 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     break;
                 }
 
+                // Ctrl+I: Inverter Video ZX-81 (%)
+                if (is_ctrl && (vk == 'I' || vk == 'i')) {
+                    execute_action(202);
+                    break;
+                }
+
                 // F5: Maximizar / Restaurar janela
                 if (vk == VK_F5) {
                     if (maximized) {
@@ -2361,8 +2624,12 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     break;
                 }
 
-                // ESC: No TUI fecha janela (104); no CLI sai (103)
+                // ESC: Cancela selecao se ativa; no TUI fecha janela (104); no CLI sai (103)
                 if (vk == VK_ESCAPE) {
+                    if (has_selection) {
+                        has_selection = false;
+                        break;
+                    }
                     if (presentation == EditorPresentation::TUI_INTEGRATED) {
                         execute_action(104);
                     } else {
@@ -2378,61 +2645,88 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 }
 
                 // Navegacao no texto
-                if (vk == VK_UP) {
-                    cursor_row = std::max(0, cursor_row - 1);
-                } else if (vk == VK_DOWN) {
-                    cursor_row = std::min((int)lines.size() - 1, cursor_row + 1);
-                } else if (vk == VK_LEFT) {
-                    if (cursor_col > 0) {
-                        cursor_col--;
-                    } else if (cursor_row > 0) {
-                        cursor_row--;
-                        cursor_col = (int)lines[cursor_row].size();
+                if (vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT ||
+                    vk == VK_HOME || vk == VK_END || vk == VK_PRIOR || vk == VK_NEXT) {
+
+                    if (is_shift && !has_selection) {
+                        has_selection = true;
+                        sel_start_row = cursor_row;
+                        sel_start_col = cursor_col;
+                    } else if (!is_shift && has_selection) {
+                        has_selection = false;
                     }
-                } else if (vk == VK_RIGHT) {
-                    if (cursor_col < (int)lines[cursor_row].size()) {
-                        cursor_col++;
-                    } else if (cursor_row + 1 < (int)lines.size()) {
-                        cursor_row++;
+
+                    if (vk == VK_UP) {
+                        cursor_row = std::max(0, cursor_row - 1);
+                    } else if (vk == VK_DOWN) {
+                        cursor_row = std::min((int)lines.size() - 1, cursor_row + 1);
+                    } else if (vk == VK_LEFT) {
+                        if (cursor_col > 0) {
+                            cursor_col--;
+                        } else if (cursor_row > 0) {
+                            cursor_row--;
+                            cursor_col = (int)lines[cursor_row].size();
+                        }
+                    } else if (vk == VK_RIGHT) {
+                        if (cursor_col < (int)lines[cursor_row].size()) {
+                            cursor_col++;
+                        } else if (cursor_row + 1 < (int)lines.size()) {
+                            cursor_row++;
+                            cursor_col = 0;
+                        }
+                    } else if (vk == VK_HOME) {
                         cursor_col = 0;
+                    } else if (vk == VK_END) {
+                        cursor_col = (int)lines[cursor_row].size();
+                    } else if (vk == VK_PRIOR) {
+                        cursor_row = std::max(0, cursor_row - inner_h);
+                    } else if (vk == VK_NEXT) {
+                        cursor_row = std::min((int)lines.size() - 1, cursor_row + inner_h);
                     }
-                } else if (vk == VK_HOME) {
-                    cursor_col = 0;
-                } else if (vk == VK_END) {
-                    cursor_col = (int)lines[cursor_row].size();
-                } else if (vk == VK_PRIOR) {
-                    cursor_row = std::max(0, cursor_row - inner_h);
-                } else if (vk == VK_NEXT) {
-                    cursor_row = std::min((int)lines.size() - 1, cursor_row + inner_h);
+
+                    cursor_col = std::min(cursor_col, (int)lines[cursor_row].size());
+
+                    if (is_shift) {
+                        sel_end_row = cursor_row;
+                        sel_end_col = cursor_col;
+                        if (sel_start_row == sel_end_row && sel_start_col == sel_end_col) {
+                            has_selection = false;
+                        }
+                    }
                 }
                 // Backspace
                 else if (vk == VK_BACK) {
-                    if (cursor_col > 0) {
-                        lines[cursor_row].erase(cursor_col - 1, 1);
-                        cursor_col--;
-                        modified = true;
-                    } else if (cursor_row > 0) {
-                        int prev_len = (int)lines[cursor_row - 1].size();
-                        lines[cursor_row - 1] += lines[cursor_row];
-                        lines.erase(lines.begin() + cursor_row);
-                        cursor_row--;
-                        cursor_col = prev_len;
-                        modified = true;
+                    if (!delete_selection()) {
+                        if (cursor_col > 0) {
+                            lines[cursor_row].erase(cursor_col - 1, 1);
+                            cursor_col--;
+                            modified = true;
+                        } else if (cursor_row > 0) {
+                            int prev_len = (int)lines[cursor_row - 1].size();
+                            lines[cursor_row - 1] += lines[cursor_row];
+                            lines.erase(lines.begin() + cursor_row);
+                            cursor_row--;
+                            cursor_col = prev_len;
+                            modified = true;
+                        }
                     }
                 }
                 // Delete
                 else if (vk == VK_DELETE) {
-                    if (cursor_col < (int)lines[cursor_row].size()) {
-                        lines[cursor_row].erase(cursor_col, 1);
-                        modified = true;
-                    } else if (cursor_row + 1 < (int)lines.size()) {
-                        lines[cursor_row] += lines[cursor_row + 1];
-                        lines.erase(lines.begin() + cursor_row + 1);
-                        modified = true;
+                    if (!delete_selection()) {
+                        if (cursor_col < (int)lines[cursor_row].size()) {
+                            lines[cursor_row].erase(cursor_col, 1);
+                            modified = true;
+                        } else if (cursor_row + 1 < (int)lines.size()) {
+                            lines[cursor_row] += lines[cursor_row + 1];
+                            lines.erase(lines.begin() + cursor_row + 1);
+                            modified = true;
+                        }
                     }
                 }
                 // Enter
                 else if (vk == VK_RETURN) {
+                    delete_selection();
                     std::string current = lines[cursor_row];
                     std::string before = current.substr(0, cursor_col);
                     std::string after = current.substr(cursor_col);
@@ -2446,12 +2740,14 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 }
                 // Tab
                 else if (vk == VK_TAB) {
+                    delete_selection();
                     lines[cursor_row].insert(cursor_col, "    ");
                     cursor_col += 4;
                     modified = true;
                 }
                 // Caractere digitavel normal
                 else if (wc >= 32 && wc != 127) {
+                    delete_selection();
                     char c = (char)wc;
                     lines[cursor_row].insert(lines[cursor_row].begin() + cursor_col, c);
                     cursor_col++;
