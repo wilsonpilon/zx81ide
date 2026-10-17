@@ -131,6 +131,22 @@
   4. Compilação limpa via `build.ps1 -Clean`, testes funcionais e geração do pacote `zx81ide-v-0.1.7.zip`.
   5. Commit, tag e publicação do release no GitHub via `gh release create`.
 
+### Sessão 09 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Criação do editor de código do zx81ide:
+    * Definição da arquitetura dos editores: 2 apresentações (CLI e TUI) x 2 estilos (Livre moderno padrão Turbo C++ / Turbo Pascal 6 e Classic fiel ao Sinclair ZX-81), totalizando 4 combinações.
+    * Implementação inicial: Editor Livre Simples para o modo CLI (`editor <arquivo.bas>`), abrindo janela padrão Turbo C++ com moldura dupla IBM-PC e 80x25 caracteres úteis para escrita.
+    * Barra de título com botão fechar mouseável `[■]`, nome do arquivo e botão maximizar/restaurar (`=▲=` / `=↕=`).
+    * Barra de rolagem vertical à direita e horizontal inferior, com caractere de junção de quadro duplo `╬` no canto inferior direito para redimensionamento.
+    * Suporte a inserção de texto, `Enter`, `Backspace`, `Delete`, setas de navegação, atalhos de salvar (`F2`/`Ctrl+S`) e diálogo de saída com confirmação.
+* **Ações Executadas:**
+  1. Criação de `include/editor/text_editor.h` e `src/editor/text_editor.cpp` com suporte a teclado e mouse (clique, arrasto, roda de rolagem e redimensionamento).
+  2. Integração do comando `editor <arquivo>` no console interativo CLI e como argumento de linha de comando (`zx81ide editor <arquivo>` e `zx81ide <arquivo>`).
+  3. Atualização de `CMakeLists.txt`, `include/core/version.h` (versão `v0.1.8`), `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`.
+  4. Compilação via `build.ps1 -Clean`, geração do pacote compactado `zx81ide-v-0.1.8.zip`.
+  5. Commit, tag e publicação do release no GitHub via `gh release create`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

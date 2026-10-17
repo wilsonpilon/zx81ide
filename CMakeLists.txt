@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(zx81ide VERSION 0.1.7 LANGUAGES C CXX)
+project(zx81ide VERSION 0.1.8 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,6 +33,7 @@ set(SOURCES
     src/cli/cli_parser.cpp
     src/cli/cli_app.cpp
     src/ui_tui/tui_app.cpp
+    src/editor/text_editor.cpp
 )
 
 # Executable target

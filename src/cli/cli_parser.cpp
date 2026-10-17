@@ -29,6 +29,13 @@ CliOptions parse_arguments(int argc, char* argv[]) {
             options.mode = AppMode::GUI;
         } else if (arg == "--cli") {
             options.mode = AppMode::CLI_INTERACTIVE;
+        } else if (arg == "editor" || arg == "--editor") {
+            options.mode = AppMode::EDITOR;
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                options.source_file = argv[++i];
+            } else if (options.source_file.empty()) {
+                options.source_file = "NONAME.BAS";
+            }
         } else if (arg == "--theme") {
             if (i + 1 < argc) {
                 options.theme_override = argv[++i];
@@ -65,6 +72,7 @@ CliOptions parse_arguments(int argc, char* argv[]) {
                 options.mode = AppMode::PROJECT_INFO;
             } else {
                 options.source_file = arg;
+                options.mode = AppMode::EDITOR;
             }
         }
     }
@@ -80,14 +88,17 @@ void print_help() {
     std::cout << "================================================================" << std::endl;
     std::cout << "Uso:\n";
     std::cout << "  zx81ide                             Inicia no modo interativo CLI (padrao)\n";
-    std::cout << "  zx81ide [opcoes]                    Executa opcao ou modo especifico\n";
-    std::cout << "  zx81ide <projeto.zx81project>       Inspeciona resumo de um projeto\n\n";
+    std::cout << "  zx81ide editor <arquivo.bas>        Abre o editor de texto Turbo C++ no console\n";
+    std::cout << "  zx81ide <arquivo.bas>               Abre diretamente o arquivo no editor de texto\n";
+    std::cout << "  zx81ide <projeto.zx81project>       Inspeciona resumo de um projeto\n";
+    std::cout << "  zx81ide [opcoes]                    Executa opcao ou modo especifico\n\n";
     std::cout << "Opcoes de Linha de Comando:\n";
     std::cout << "  -h, --help                          Exibe esta mensagem de ajuda e encerra\n";
     std::cout << "  -v, --version                       Exibe informacoes de versao e encerra\n";
     std::cout << "  --cli                               Inicia no console interativo CLI (padrao)\n";
     std::cout << "  --tui                               Inicia no modo TUI (Text User Interface retro)\n";
     std::cout << "  --gui                               Inicia no modo GUI (interface desktop grafica)\n";
+    std::cout << "  --editor <arquivo>                  Abre o editor de texto na janela Turbo C++\n";
     std::cout << "  --theme <nome>                      Define ou altera o tema no banco (normal, invertido, claro, escuro)\n";
     std::cout << "  --config-db <caminho.db>            Especifica arquivo customizado de banco de configuracoes SQLite\n";
     std::cout << "  --project <arquivo.zx81project>     Exibe o conteudo e estatisticas de um arquivo de projeto SQLite\n\n";

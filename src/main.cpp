@@ -1,6 +1,7 @@
 #include "cli/cli_parser.h"
 #include "cli/cli_app.h"
 #include "ui_tui/tui_app.h"
+#include "editor/text_editor.h"
 #include "core/config_manager.h"
 #include "core/project.h"
 #include <iostream>
@@ -76,6 +77,10 @@ int main(int argc, char* argv[]) {
             std::cout << "Iniciando modo TUI retro alternativo...\n\n";
             cfg.prompt_theme_selection_if_needed();
             return zx81ide::ui_tui::run_tui();
+
+        case AppMode::EDITOR:
+            cfg.prompt_theme_selection_if_needed();
+            return zx81ide::editor::run_text_editor(options.source_file.empty() ? "NONAME.BAS" : options.source_file);
 
         case AppMode::CLI_INTERACTIVE:
         default:

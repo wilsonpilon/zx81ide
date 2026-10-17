@@ -9,6 +9,27 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.8] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Implementacao do Editor de Texto Livre Turbo C++ no modo CLI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Módulo do Editor de Texto Livre Turbo C++ (`editor/text_editor.h`, `src/editor/text_editor.cpp`):**
+  * Primeira das 4 combinações de editores planejadas (Estilo Livre em Apresentação Standalone na CLI).
+  * **Janela Estilo Turbo C++ / Turbo Pascal 6:** Moldura dupla IBM-PC (`╔`, `═`, `╗`, `║`, `╚`, `╝`, `╬`) abrindo inicialmente com 80x25 caracteres úteis de escrita (área total 82x27 adaptável ao console).
+  * **Barra de Título Funcional:** Botão fechar `[■]` com suporte a clique de mouse, título centralizado com o nome do arquivo e indicador de modificação (`*`), e botão maximizar/restaurar (`=▲=` / `=↕=`).
+  * **Barras de Rolagem Bidirecionais:** Barra de rolagem vertical à direita (`▲`, trilho `░`, thumb `█`, `▼`) e barra horizontal inferior (`◄`, trilho `░`, thumb `█`, `►`).
+  * **Junção de Redimensionamento:** Caractere de junção de quadro duplo `╬` no canto inferior direito, permitindo redimensionamento dinâmico via clique e arrasto do mouse.
+  * **Suporte Completo a Teclado e Mouse:** Inserção de texto, quebra de linha com `Enter`, `Backspace`, `Delete`, `Tab` (4 espaços), navegação por setas (`Cima`, `Baixo`, `Esquerda`, `Direita`), `Home`, `End`, `Page Up`, `Page Down`, roda do mouse (`Mouse Wheel`) e clique direto no texto para posicionamento do cursor.
+  * **Atalhos e Diálogo de Confirmação:** Atalho `F2` / `Ctrl+S` para salvar no disco, `F5` para zoom/maximizar, `Esc` / `Alt+X` / `Ctrl+Q` para sair com diálogo modal de confirmação (`Sim`, `Não`, `Cancelar`) quando o arquivo for modificado.
+  * **Integração com Paleta Sinclair ZX-81:** O editor adapta suas cores instantaneamente ao tema ativo (`normal`, `invertido`, `escuro`, `claro`) gravado no SQLite.
+* **Comandos CLI e Parser:**
+  * Comando `editor <arquivo.bas>` adicionado ao console interativo CLI.
+  * Argumento de linha de comando `zx81ide editor <arquivo.bas>` ou `zx81ide <arquivo.bas>` para abertura direta do editor.
+
+---
+
 ## [0.1.7] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Implementacao visual dos temas escuro e claro no modo TUI"

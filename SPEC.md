@@ -62,13 +62,22 @@ Cada componente crítico do ecossistema possui uma ferramenta principal recomend
 zx81ide/
 ├── CMakeLists.txt              # Build system principal
 ├── include/
-│   ├── core/                   # Gerenciamento de projeto e configs
+│   ├── core/                   # Gerenciamento de projeto e configs (SQLite)
+│   ├── cli/                    # Modos de comando e console interativo
+│   ├── editor/                 # Editores de codigo (Livre Turbo C++ e Classic ZX-81)
 │   ├── assembler/              # Integração com SJAsmPlus
 │   ├── compiler/               # Pré-processador BASIC e gerador `.p`
 │   ├── emulator/               # Núcleo do emulador e protocolo de comunicação
-│   ├── ui_tui/                 # Interfaces de terminal (FTXUI)
+│   ├── ui_tui/                 # Interfaces de terminal retro (TUI)
 │   └── ui_gui/                 # Interface gráfica (Dear ImGui)
 ├── src/                        # Implementações correspondentes
-├── third_party/                # Dependências externas (SJAsmPlus core, zmakebas, etc.)
+├── third_party/                # Dependências externas (SQLite3, SJAsmPlus, zmakebas, etc.)
 ├── tests/                      # Testes unitários (Parser, Compilador, Gerador `.p`)
 └── SPEC.md                     # Este documento de especificação
+```
+
+### 4.1. Matriz de Editores Planejada (4 Combinações)
+1. **Editor Livre (Free Text) na CLI [Entregue v0.1.8]:** Janela Turbo C++ com moldura dupla IBM-PC, 80x25, mouse e atalhos completos.
+2. **Editor Livre (Free Text) integrado na TUI:** Janela dentro do desktop TUI compartilhando menus e barra de status.
+3. **Editor Clássico (Classic ZX-81) na CLI:** Edição autêntica ao Sinclair ZX-81 (linha inferior, tokens, cursor K/L).
+4. **Editor Clássico (Classic ZX-81) na TUI:** Apresentação clássica integrada no ambiente retro.

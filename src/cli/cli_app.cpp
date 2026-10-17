@@ -1,6 +1,7 @@
 #include "cli/cli_app.h"
 #include "cli/cli_parser.h"
 #include "ui_tui/tui_app.h"
+#include "editor/text_editor.h"
 #include "core/version.h"
 #include "core/config_manager.h"
 #include "core/project.h"
@@ -69,6 +70,7 @@ void print_cli_banner() {
 void print_cli_commands() {
     std::cout << "\nComandos Disponiveis no Console CLI:\n";
     std::cout << "  Ambiente e Modos:\n";
+    std::cout << "    editor <arquivo.bas>              Abre o editor de texto livre Turbo C++ no console\n";
     std::cout << "    tui                               Inicia o modo TUI retro MS-DOS em tela cheia\n";
     std::cout << "    help, ?                           Exibe esta lista de comandos\n";
     std::cout << "    version, ver                      Exibe os detalhes de versao e codenames\n";
@@ -426,6 +428,13 @@ int run_interactive_cli() {
             handle_config_command(tokens);
         } else if (primary_cmd == "project" || primary_cmd == "proj") {
             handle_project_command(tokens);
+        } else if (primary_cmd == "editor" || primary_cmd == "edit") {
+            std::string file_to_edit = "NONAME.BAS";
+            if (tokens.size() > 1) {
+                file_to_edit = tokens[1];
+            }
+            zx81ide::editor::run_text_editor(file_to_edit);
+            std::cout << "\n[Retornando ao console CLI zx81ide]\n\n";
         } else if (primary_cmd == "tui") {
             std::cout << "\nIniciando modo TUI retro... Pressione qualquer tecla para continuar se solicitado.\n";
             zx81ide::ui_tui::run_tui();

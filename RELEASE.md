@@ -4,6 +4,46 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.8] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.8 [3D Monster Maze] - Implementacao do Editor de Texto Livre Turbo C++ no modo CLI`
+
+* **Versão:** `0.1.8`
+* **Tag Git:** `v0.1.8`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Implementacao do Editor de Texto Livre Turbo C++ no modo CLI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.8.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.8** inaugura o subsistema de edição do **zx81ide** entregando o **Editor Livre de Textos Moderno** em modo standalone para console CLI, com estética fiel aos ambientes de desenvolvimento MS-DOS dos anos 1990 (Turbo C++ e Turbo Pascal 6 da Borland). O editor conta com moldura dupla IBM-PC, área útil inicial de 80x25 caracteres, barra de título interativa com botão fechar mouseável `[■]`, botão de zoom/maximização (`=▲=` / `=↕=`), barras de rolagem bidirecionais (vertical e horizontal) com indicadores de posição e junção `╬` para redimensionamento da janela.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Subsistema do Editor (`include/editor/text_editor.h`, `src/editor/text_editor.cpp`):**
+  * Arquitetura extensível suportando as 4 combinações de editores do projeto (Modos CLI Standalone / TUI Integrado x Estilos Livre Moderno / ZX-81 Clássico).
+  * Janela Turbo C++ com moldura dupla IBM-PC (`╔`, `═`, `╗`, `║`, `╚`, `╝`, `╬`), abrindo inicialmente em 80x25 caracteres úteis de escrita.
+  * Botão de fechamento por mouse no topo esquerdo (`[■]`), com cálculo dinâmico de coordenadas de clique no console.
+  * Título centralizado exibindo o nome do arquivo e indicador de modificação (`*`).
+  * Botão de maximização e restauração no canto superior direito (`[▲]` e `[↕]`), alternável por clique ou tecla `F5`.
+  * Barra de rolagem vertical à direita (`▲`, `░`, `█`, `▼`) com atualização de thumb proporcional ao número de linhas.
+  * Barra de rolagem horizontal inferior (`◄`, `░`, `█`, `►`) com thumb proporcional à largura do texto.
+  * Canto inferior direito com caractere de junção `╬` habilitado para redimensionamento da janela via clique e arrasto do mouse.
+  * Barra de título com suporte a arrasto para mover a janela pela tela do console.
+  * Suporte ergonômico a teclado: inserção de caracteres normais e acentuados, quebra de linha (`Enter`), retrocesso (`Backspace`), exclusão (`Delete`), tabulação (`Tab` com 4 espaços), navegação por setas (`Cima`, `Baixo`, `Esquerda`, `Direita`), `Home`, `End`, `Page Up` e `Page Down`.
+  * Suporte a roda do mouse (`Mouse Wheel`) para rolagem vertical rápida do documento.
+  * Atalho `F2` e `Ctrl+S` para salvamento imediato do arquivo no disco.
+  * Atalho `Esc`, `Alt+X` ou `Ctrl+Q` com diálogo modal de confirmação para salvar alterações pendentes.
+  * Calibração automática das cores conforme o tema configurado no SQLite (`normal`, `invertido`, `escuro`, `claro`).
+* **Integração no Console CLI e Linha de Comando:**
+  * Comando `editor <arquivo.bas>` ou `edit <arquivo.bas>` disponível no console interativo CLI.
+  * Suporte a argumentos diretos: `zx81ide editor <arquivo.bas>` ou `zx81ide <arquivo.bas>`.
+* **Pacote de Distribuição:** Binário compilado `zx81ide.exe` e pacote compactado `zx81ide-v-0.1.8.zip`.
+
+---
+
 ## [v0.1.7] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.7 [3D Monster Maze] - Implementacao visual dos temas escuro e claro no modo TUI`
 

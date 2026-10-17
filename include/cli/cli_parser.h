@@ -13,7 +13,8 @@ enum class AppMode {
     CLI_VERSION,
     TUI,
     GUI,
-    PROJECT_INFO
+    PROJECT_INFO,
+    EDITOR
 };
 
 struct CliOptions {
