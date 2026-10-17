@@ -782,10 +782,20 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
 
     DWORD prev_out_mode = 0;
     DWORD prev_in_mode = 0;
+    CONSOLE_CURSOR_INFO orig_cci;
+    bool has_orig_cci = false;
 
     if (hOut != INVALID_HANDLE_VALUE) {
         GetConsoleMode(hOut, &prev_out_mode);
         SetConsoleMode(hOut, prev_out_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+        if (GetConsoleCursorInfo(hOut, &orig_cci)) {
+            has_orig_cci = true;
+            CONSOLE_CURSOR_INFO block_cci = orig_cci;
+            block_cci.dwSize = 100; // 100% de preenchimento = bloco quadrado solido MS-DOS!
+            block_cci.bVisible = TRUE;
+            SetConsoleCursorInfo(hOut, &block_cci);
+        }
     }
     if (hIn != INVALID_HANDLE_VALUE) {
         GetConsoleMode(hIn, &prev_in_mode);
@@ -795,6 +805,8 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 #endif
+
+    std::cout << "\x1b[1 q"; // Sequencia ANSI VT para cursor de bloco quadrado piscando (MS-DOS)
 
     std::string current_file_path = file_path;
     if (current_file_path.empty()) {
@@ -860,6 +872,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     int drag_offset_x = 0;
     int drag_offset_y = 0;
     bool is_resizing = false;
+    DWORD prev_btn_state = 0;
 
     // Modais e Dialogos
     bool show_exit_dlg = false;
@@ -1682,6 +1695,11 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                 DWORD btn = rec.Event.MouseEvent.dwButtonState;
                 DWORD flags = rec.Event.MouseEvent.dwEventFlags;
 
+                bool left_clicked = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) && !(prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
+                bool left_released = !(btn & FROM_LEFT_1ST_BUTTON_PRESSED) && (prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
+                bool left_down = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) != 0;
+
+                // 1. Roda do Mouse (Scroll vertical)
                 if (flags & MOUSE_WHEELED) {
                     short delta = (short)HIWORD(rec.Event.MouseEvent.dwButtonState);
                     if (delta > 0) {
@@ -1689,25 +1707,92 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                     } else if (delta < 0) {
                         cursor_row = std::min((int)lines.size() - 1, cursor_row + 3);
                     }
+                    prev_btn_state = btn;
                     continue;
                 }
 
-                if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) {
-                    // 0. Clique na Barra de Menus Superior (Linha 0)
-                    if (mpos.Y == 0) {
-                        for (size_t m = 0; m < menus.size(); ++m) {
-                            if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
-                                active_menu_idx = (int)m;
-                                active_item_idx = 0;
-                                menu_active = true;
-                                break;
+                // 2. Liberacao do Botao Esquerdo (Mouse Up)
+                if (left_released || !left_down) {
+                    is_dragging = false;
+                    is_resizing = false;
+                }
+
+                // 3. Movimentacao do Mouse (MOUSE_MOVED)
+                if (flags & MOUSE_MOVED) {
+                    if (is_dragging && !maximized) {
+                        win_x = std::max(0, std::min(term_w - win_w, (int)mpos.X - drag_offset_x));
+                        win_y = std::max(1, std::min(term_h - 2 - win_h, (int)mpos.Y - drag_offset_y));
+                        restored_x = win_x;
+                        restored_y = win_y;
+                        prev_btn_state = btn;
+                        break;
+                    } else if (is_resizing && !maximized) {
+                        int new_w = mpos.X - win_x + 1;
+                        int new_h = mpos.Y - win_y + 1;
+                        win_w = std::max(28, std::min(term_w - win_x, new_w));
+                        win_h = std::max(8, std::min(term_h - 1 - win_y, new_h));
+                        restored_w = win_w;
+                        restored_h = win_h;
+                        prev_btn_state = btn;
+                        break;
+                    } else if (menu_active) {
+                        // Navega sobre os titulos de menus se passar o mouse na linha 0
+                        if (mpos.Y == 0) {
+                            for (size_t m = 0; m < menus.size(); ++m) {
+                                if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                    if (active_menu_idx != (int)m) {
+                                        active_menu_idx = (int)m;
+                                        active_item_idx = 0;
+                                    }
+                                    break;
+                                }
+                            }
+                        } else {
+                            // Destaca item no submenu dropdown ativo sob o cursor
+                            const auto& cur_menu = menus[active_menu_idx];
+                            int drop_x = cur_menu.x_pos;
+                            int drop_y = 1;
+                            int num_items = (int)cur_menu.items.size();
+                            int drop_inner_w = 26;
+                            for (const auto& it : cur_menu.items) {
+                                int len = (int)it.label.size() + (int)it.shortcut.size() + 4;
+                                if (len > drop_inner_w) drop_inner_w = len;
+                            }
+                            int drop_w = drop_inner_w + 2;
+
+                            if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
+                                mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
+                                active_item_idx = mpos.Y - (drop_y + 1);
                             }
                         }
-                        break;
                     }
+                }
 
-                    // Se menu dropdown estiver aberto, processa clique no menu
+                // 4. Clique com Botao Esquerdo (APENAS na transicao inicial para baixo)
+                if (left_clicked && !is_dragging && !is_resizing) {
+                    // A. Se menu dropdown estiver aberto, processa clique
                     if (menu_active) {
+                        if (mpos.Y == 0) {
+                            bool clicked_menu = false;
+                            for (size_t m = 0; m < menus.size(); ++m) {
+                                if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                    if (active_menu_idx == (int)m) {
+                                        menu_active = false;
+                                    } else {
+                                        active_menu_idx = (int)m;
+                                        active_item_idx = 0;
+                                    }
+                                    clicked_menu = true;
+                                    break;
+                                }
+                            }
+                            if (!clicked_menu) {
+                                menu_active = false;
+                            }
+                            prev_btn_state = btn;
+                            break;
+                        }
+
                         const auto& cur_menu = menus[active_menu_idx];
                         int drop_x = cur_menu.x_pos;
                         int drop_y = 1;
@@ -1726,16 +1811,17 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 int act_id = cur_menu.items[clicked_idx].id;
                                 menu_active = false;
                                 execute_action(act_id);
+                                prev_btn_state = btn;
                                 break;
                             }
                         } else {
                             menu_active = false;
+                            prev_btn_state = btn;
                             break;
                         }
-                        continue;
                     }
 
-                    // Modais ativos com clique
+                    // B. Modais ativos com clique
                     if (show_exit_dlg) {
                         int dlg_w = 46;
                         int dlg_h = 7;
@@ -1754,6 +1840,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 show_exit_dlg = false;
                             }
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
@@ -1764,26 +1851,31 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             cursor_col = 0;
                             scroll_row = std::max(0, cursor_row - inner_h / 2);
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
                     if (show_compile_success_modal) {
                         show_compile_success_modal = false;
+                        prev_btn_state = btn;
                         break;
                     }
 
                     if (show_about_modal) {
                         show_about_modal = false;
+                        prev_btn_state = btn;
                         break;
                     }
 
                     if (show_help_modal) {
                         show_help_modal = false;
+                        prev_btn_state = btn;
                         break;
                     }
 
                     if (show_compiler_opts_modal) {
                         show_compiler_opts_modal = false;
+                        prev_btn_state = btn;
                         break;
                     }
 
@@ -1793,7 +1885,6 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         int dlg_x = std::max(0, (term_w - dlg_w) / 2);
                         int dlg_y = std::max(0, (term_h - dlg_h) / 2);
 
-                        // Clique nas colunas de glifos
                         if (mpos.Y >= dlg_y + 2 && mpos.Y <= dlg_y + 13) {
                             int r = mpos.Y - (dlg_y + 2);
                             if (mpos.X >= dlg_x + 2 && mpos.X <= dlg_x + 18) {
@@ -1814,16 +1905,32 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 show_graphics_modal = false;
                             }
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 1. Botao fechar [×] (Fecha janela no TUI ou sai no CLI)
+                    // C. Clique na Barra de Menus Superior (Linha 0)
+                    if (mpos.Y == 0) {
+                        for (size_t m = 0; m < menus.size(); ++m) {
+                            if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                active_menu_idx = (int)m;
+                                active_item_idx = 0;
+                                menu_active = true;
+                                break;
+                            }
+                        }
+                        prev_btn_state = btn;
+                        break;
+                    }
+
+                    // D. Botao fechar [×] (Fecha janela no TUI ou sai no CLI)
                     if (mpos.Y == win_y && mpos.X >= win_x + 2 && mpos.X <= win_x + 4) {
                         execute_action(104);
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 2. Botao maximizar/restaurar [▲] / [↕]
+                    // E. Botao maximizar/restaurar [▲] / [↕]
                     if (mpos.Y == win_y && mpos.X >= win_x + win_w - 5 && mpos.X <= win_x + win_w - 3) {
                         if (maximized) {
                             maximized = false;
@@ -1842,18 +1949,29 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                             win_w = term_w;
                             win_h = std::max(3, term_h - 2);
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 3. Juncao inferior direita (◢)
-                    if (mpos.Y == win_y + win_h - 1 && mpos.X == win_x + win_w - 1) {
+                    // F. Puxador inferior direito para redimensionamento (◢)
+                    if (mpos.Y == win_y + win_h - 1 && mpos.X >= win_x + win_w - 2 && mpos.X <= win_x + win_w - 1) {
                         if (!maximized) {
                             is_resizing = true;
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 4. Barra vertical
+                    // G. Clique na Barra de Titulo para Arrastar (EXCLUI regioes dos botoes [×] e [▲])
+                    if (mpos.Y == win_y && mpos.X > win_x + 4 && mpos.X < win_x + win_w - 5 && !maximized) {
+                        is_dragging = true;
+                        drag_offset_x = mpos.X - win_x;
+                        drag_offset_y = mpos.Y - win_y;
+                        prev_btn_state = btn;
+                        break;
+                    }
+
+                    // H. Barra vertical de rolagem
                     if (mpos.X == win_x + win_w - 1) {
                         if (mpos.Y == win_y + 1) {
                             cursor_row = std::max(0, cursor_row - 1);
@@ -1866,10 +1984,11 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 cursor_row = (int)(ratio * (total_lines - 1));
                             }
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 5. Barra horizontal
+                    // I. Barra horizontal de rolagem
                     if (mpos.Y == win_y + win_h - 1) {
                         if (mpos.X == win_x + 1) {
                             cursor_col = std::max(0, cursor_col - 4);
@@ -1882,18 +2001,11 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                                 cursor_col = (int)(ratio * max_col_observed);
                             }
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
-                    // 6. Arrastar barra de titulo
-                    if (mpos.Y == win_y && !maximized) {
-                        is_dragging = true;
-                        drag_offset_x = mpos.X - win_x;
-                        drag_offset_y = mpos.Y - win_y;
-                        break;
-                    }
-
-                    // 7. Clique no texto
+                    // J. Clique no texto (posiciona cursor)
                     if (mpos.Y > win_y && mpos.Y < win_y + win_h - 1 &&
                         mpos.X > win_x && mpos.X < win_x + win_w - 1) {
                         int click_r = scroll_row + (mpos.Y - win_y - 1);
@@ -1901,30 +2013,13 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
                         cursor_row = std::max(0, std::min((int)lines.size() - 1, click_r));
                         int target_line_len = (int)lines[cursor_row].size();
                         cursor_col = std::max(0, std::min(target_line_len, click_c));
+                        prev_btn_state = btn;
                         break;
                     }
                 }
 
-                if (flags & MOUSE_MOVED) {
-                    if (is_resizing && !maximized) {
-                        int new_w = mpos.X - win_x + 1;
-                        int new_h = mpos.Y - win_y + 1;
-                        win_w = std::max(25, std::min(term_w - win_x, new_w));
-                        win_h = std::max(8, std::min(term_h - 1 - win_y, new_h));
-                        restored_w = win_w;
-                        restored_h = win_h;
-                    } else if (is_dragging && !maximized) {
-                        win_x = std::max(0, std::min(term_w - win_w, (int)mpos.X - drag_offset_x));
-                        win_y = std::max(1, std::min(term_h - 2 - win_h, (int)mpos.Y - drag_offset_y));
-                        restored_x = win_x;
-                        restored_y = win_y;
-                    }
-                }
-
-                if (btn == 0) {
-                    is_dragging = false;
-                    is_resizing = false;
-                }
+                prev_btn_state = btn;
+                continue;
             }
 
             // ---------------------------------------------------------
@@ -2287,6 +2382,9 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     // Restaurar console
 #ifdef _WIN32
     if (hOut != INVALID_HANDLE_VALUE) {
+        if (has_orig_cci) {
+            SetConsoleCursorInfo(hOut, &orig_cci);
+        }
         SetConsoleMode(hOut, prev_out_mode);
     }
     if (hIn != INVALID_HANDLE_VALUE) {
@@ -2294,7 +2392,7 @@ int run_text_editor(const std::string& file_path, EditorPresentation presentatio
     }
 #endif
 
-    std::cout << Colors::RESET << Colors::SHOW_CURSOR;
+    std::cout << "\x1b[0 q" << Colors::RESET << Colors::SHOW_CURSOR;
     std::cout << "\x1b[2J" << Colors::HOME << std::flush;
 
     return exit_return_code;

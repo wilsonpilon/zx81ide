@@ -9,6 +9,28 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.13] - 2026-10-17
+### Codename: "3D Monster Maze"
+### Subtítulo: "Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Corrigido (Fixed)
+* **Eliminação de Loops de Redesenho no Menu:**
+  * O processamento de eventos de mouse agora rastreia a transição de estado do botão esquerdo (`prev_btn_state`), garantindo que um clique em opções do menu ou na barra superior seja disparado estritamente **uma única vez** no momento em que o botão é pressionado (`left_clicked`), e não repetidamente em cada micro-movimento do mouse enquanto o botão estiver pressionado.
+* **Arrasto Seguro da Janela sem Fechamentos ou Zoom Acidentais:**
+  * O arrasto da janela flutuante pelo cabeçalho superior (`is_dragging`) agora é estritamente isolado: cliques de arrasto só iniciam na área central do título (entre os botões `[×]` e `[▲]`).
+  * Enquanto a janela estiver sendo arrastada (`is_dragging == true`), todas as verificações de clique em botões da janela são desativadas, impedindo que o movimento do cursor sobre as antigas coordenadas do botão fechar (`[×]`) encerre a janela.
+  * O botão de maximizar/restaurar (`[▲]` / `[↕]`) agora exige clique explícito (`left_clicked`), não disparando mais por simples passagem do cursor (hover).
+* **Hover Suave nos Menus:**
+  * Quando um menu suspenso estiver aberto, o movimento do cursor sobre a linha 0 alterna os menus suavemente, e o movimento sobre a lista de opções destaca o item sob o ponteiro sem disparar ações acidentais.
+
+### Adicionado (Added)
+* **Cursor Quadrado Bloco Estilo MS-DOS Clássico:**
+  * Configurado o cursor do console no editor e na TUI como um **bloco sólido quadrado** (100% da altura da célula) tanto via API nativa do Windows (`CONSOLE_CURSOR_INFO` com `dwSize = 100`) quanto através da sequência de escape ANSI VT (`\x1b[1 q` - blinking block cursor), recriando com perfeição visual a experiência clássica de edição do MS-DOS (Turbo C++ / Turbo Pascal / MS-DOS Edit).
+  * O cursor original do terminal do usuário é preservado e restaurado com exatidão ao sair (`\x1b[0 q` e restauração da estrutura do console).
+
+---
+
 ## [0.1.12] - 2026-10-17
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS"

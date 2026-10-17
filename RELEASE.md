@@ -4,6 +4,27 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.13] - 2026-10-17
+### Título do Lançamento: `zx81ide v0.1.13 [3D Monster Maze] - Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido`
+
+* **Versão:** `0.1.13`
+* **Tag Git:** `v0.1.13`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.13.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.13** aprimora profundamente a precisão do suporte a mouse e recria a experiência autêntica de cursor retrô:
+1. **Transição de Clique sem Redesenho Contínuo:** Os cliques em menus e diálogos agora rastreiam o estado anterior do botão (`prev_btn_state`), disparando ações estritamente no pressionamento inicial (`left_clicked`). Acabou o problema de menus ficarem redesenhando continuamente ao clicar em opções.
+2. **Arrasto Seguro da Janela:** Durante o arrasto da janela flutuante (`is_dragging`), a verificação de botões de controle (`[×]` fechar e `[▲]` zoom) é desativada, impedindo encerramentos acidentais quando o ponteiro passa próximo às coordenadas dos botões.
+3. **Proteção contra Acionamento por Hover:** O botão maximizar/restaurar (`[▲]` / `[↕]`) agora exige clique real com o botão esquerdo, nunca mais maximizando apenas por passar o mouse por cima.
+4. **Cursor Quadrado Bloco MS-DOS:** O cursor agora é um quadrado sólido (`█`), preenchendo 100% da célula de texto tanto via API Win32 (`CONSOLE_CURSOR_INFO` dwSize = 100) quanto via ANSI VT (`\x1b[1 q`), com restauração transparente ao sair.
+
+---
+
 ## [v0.1.12] - 2026-10-17
 ### Título do Lançamento: `zx81ide v0.1.12 [3D Monster Maze] - Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS`
 

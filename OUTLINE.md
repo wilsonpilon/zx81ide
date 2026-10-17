@@ -239,6 +239,28 @@
   3. Incremento de versão para `v0.1.12` (`Editor Livre integrado na TUI com janela flutuante, redimensionavel e com sombra MS-DOS`).
   4. Atualização completa de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
 
+### Sessão 14 - 17/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * O suporte a mouse apresentava inconsistências:
+    1. Clicar em opções do menu redesenhava o menu toda hora.
+    2. Clicando na barra para arrastar a janela, se o cursor chegasse perto das coordenadas do botão fechar, a janela fechava acidentalmente.
+    3. Passar o mouse sobre o botão de maximizar causava zoom sem clicar.
+    4. Solicitação de cursor quadrado (bloco) como nos antigos programas MS-DOS.
+* **Ações Executadas:**
+  1. Rastreamento Estrito de Transição de Botão de Mouse (`prev_btn_state`):
+     * Adicionado o controle `left_clicked = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) && !(prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED)`.
+     * Cliques em menus, itens dropdown e caixas de diálogo agora disparam estritamente uma única vez no momento da pressão, eliminando repetições e loops de redesenho em micromovimentos do mouse.
+  2. Proteção de Arrasto e Desativação de Botões da Janela durante o Movimento:
+     * O arrasto (`is_dragging`) agora inicia estritamente na área de título (`mpos.X > win_x + 4 && mpos.X < win_x + win_w - 5`).
+     * Durante o arrasto ativo, todas as verificações de clique em botões (`[×]` fechar e `[▲]` zoom) são ignoradas.
+     * O botão de zoom/maximizar exige clique explícito (`left_clicked`), nunca mais ativando por hover.
+  3. Cursor Quadrado Bloco Estilo MS-DOS:
+     * Configuração do cursor com 100% de preenchimento (`CONSOLE_CURSOR_INFO` `dwSize = 100`) e envio da sequência ANSI VT `\x1b[1 q` (blinking block cursor).
+     * Restauração limpa do cursor padrão do sistema ao sair (`\x1b[0 q` e restauração da configuração do console).
+  4. Incremento de versão para `v0.1.13` (`Suporte a mouse aprimorado com transicao de clique, cursor de bloco quadrado MS-DOS e arrasto protegido`).
+  5. Atualização de `include/core/version.h`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `OUTLINE.md`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

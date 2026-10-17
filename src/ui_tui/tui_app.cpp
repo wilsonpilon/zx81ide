@@ -230,6 +230,8 @@ TuiTheme get_tui_theme(const std::string& theme_name) {
 #ifdef _WIN32
 DWORD g_prev_in_mode = 0;
 DWORD g_prev_out_mode = 0;
+CONSOLE_CURSOR_INFO g_prev_cci;
+bool g_has_prev_cci = false;
 bool g_console_initialized = false;
 #endif
 
@@ -244,6 +246,15 @@ void setup_console() {
             }
             dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
             SetConsoleMode(hOut, dwMode);
+        }
+        CONSOLE_CURSOR_INFO cci;
+        if (GetConsoleCursorInfo(hOut, &cci)) {
+            if (!g_console_initialized) {
+                g_prev_cci = cci;
+                g_has_prev_cci = true;
+            }
+            cci.dwSize = 100; // Quadrado solido 100% estilo MS-DOS
+            SetConsoleCursorInfo(hOut, &cci);
         }
     }
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
@@ -262,22 +273,27 @@ void setup_console() {
     SetConsoleOutputCP(CP_UTF8);
     SetConsoleCP(CP_UTF8);
 #endif
-    std::cout << Colors::HIDE_CURSOR;
+    std::cout << "\x1b[1 q" << Colors::HIDE_CURSOR;
     std::cout << "\x1b[2J" << Colors::HOME << std::flush;
 }
 
 void restore_console() {
 #ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    if (hOut != INVALID_HANDLE_VALUE && g_prev_out_mode != 0) {
-        SetConsoleMode(hOut, g_prev_out_mode);
+    if (hOut != INVALID_HANDLE_VALUE) {
+        if (g_has_prev_cci) {
+            SetConsoleCursorInfo(hOut, &g_prev_cci);
+        }
+        if (g_prev_out_mode != 0) {
+            SetConsoleMode(hOut, g_prev_out_mode);
+        }
     }
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
     if (hIn != INVALID_HANDLE_VALUE && g_prev_in_mode != 0) {
         SetConsoleMode(hIn, g_prev_in_mode);
     }
 #endif
-    std::cout << Colors::RESET << Colors::SHOW_CURSOR;
+    std::cout << "\x1b[0 q" << Colors::RESET << Colors::SHOW_CURSOR;
     std::cout << "\x1b[2J" << Colors::HOME << std::flush;
 }
 
@@ -480,6 +496,7 @@ int run_tui(const std::string& initial_file) {
     int menu_item_idx = 0;
     bool menu_open = false;
     bool show_about = false;
+    DWORD prev_btn_state = 0;
 
     auto menus = build_tui_menus();
 
@@ -669,10 +686,48 @@ int run_tui(const std::string& initial_file) {
             if (rec.EventType == MOUSE_EVENT) {
                 COORD mpos = rec.Event.MouseEvent.dwMousePosition;
                 DWORD btn = rec.Event.MouseEvent.dwButtonState;
+                DWORD flags = rec.Event.MouseEvent.dwEventFlags;
 
-                if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) {
+                bool left_clicked = (btn & FROM_LEFT_1ST_BUTTON_PRESSED) && !(prev_btn_state & FROM_LEFT_1ST_BUTTON_PRESSED);
+
+                // 1. Movimentacao do Mouse (hover sobre menus e itens)
+                if (flags & MOUSE_MOVED) {
+                    if (menu_open) {
+                        if (mpos.Y == 0) {
+                            for (size_t m = 0; m < menus.size(); ++m) {
+                                if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
+                                    if (current_menu != (int)m) {
+                                        current_menu = (int)m;
+                                        menu_item_idx = 0;
+                                    }
+                                    break;
+                                }
+                            }
+                        } else if (current_menu >= 0 && current_menu < (int)menus.size()) {
+                            const auto& cur_menu = menus[current_menu];
+                            int drop_x = cur_menu.x_pos;
+                            int drop_y = 1;
+                            int num_items = (int)cur_menu.items.size();
+                            int drop_inner_w = 20;
+                            for (const auto& item : cur_menu.items) {
+                                int item_len = (int)item.label.size() + (int)item.shortcut.size() + 4;
+                                if (item_len > drop_inner_w) drop_inner_w = item_len;
+                            }
+                            int drop_w = drop_inner_w + 2;
+
+                            if (mpos.Y >= drop_y + 1 && mpos.Y <= drop_y + num_items &&
+                                mpos.X >= drop_x + 1 && mpos.X <= drop_x + drop_w - 1) {
+                                menu_item_idx = mpos.Y - (drop_y + 1);
+                            }
+                        }
+                    }
+                }
+
+                // 2. Clique com Botao Esquerdo (apenas no pressionamento inicial)
+                if (left_clicked) {
                     if (show_about) {
                         show_about = false;
+                        prev_btn_state = btn;
                         break;
                     }
 
@@ -681,9 +736,13 @@ int run_tui(const std::string& initial_file) {
                         bool clicked_menu = false;
                         for (size_t m = 0; m < menus.size(); ++m) {
                             if (mpos.X >= menus[m].x_pos && mpos.X < menus[m].x_pos + menus[m].width) {
-                                current_menu = (int)m;
-                                menu_item_idx = 0;
-                                menu_open = true;
+                                if (menu_open && current_menu == (int)m) {
+                                    menu_open = false;
+                                } else {
+                                    current_menu = (int)m;
+                                    menu_item_idx = 0;
+                                    menu_open = true;
+                                }
                                 clicked_menu = true;
                                 break;
                             }
@@ -691,6 +750,7 @@ int run_tui(const std::string& initial_file) {
                         if (!clicked_menu) {
                             menu_open = false;
                         }
+                        prev_btn_state = btn;
                         break;
                     }
 
@@ -714,14 +774,18 @@ int run_tui(const std::string& initial_file) {
                                 int act_id = cur_menu.items[clicked_idx].id;
                                 menu_open = false;
                                 execute_action(act_id);
+                                prev_btn_state = btn;
                                 break;
                             }
                         } else {
                             menu_open = false;
+                            prev_btn_state = btn;
                             break;
                         }
                     }
                 }
+
+                prev_btn_state = btn;
                 continue;
             }
 
