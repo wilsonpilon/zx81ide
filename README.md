@@ -6,7 +6,8 @@
 [![CMake](https://img.shields.io/badge/CMake-3.15%2B-brightgreen.svg)](https://cmake.org/)
 [![PowerShell](https://img.shields.io/badge/PowerShell-7%2B-blueviolet.svg)](https://github.com/PowerShell/PowerShell)
 [![License: BSD-3-Clause](https://img.shields.io/badge/License-BSD_3--Clause-yellow.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Version-v0.1.4--3D_Monster_Maze-orange.svg)](RELEASE.md)
+[![Release](https://img.shields.io/badge/Version-v0.1.5--3D_Monster_Maze-orange.svg)](RELEASE.md)
+[![Database](https://img.shields.io/badge/Storage-SQLite_3-blue.svg)](https://www.sqlite.org/)
 
 ---
 
@@ -58,6 +59,7 @@ O **zx81ide** presta homenagem e apoia-se em soluções consagradas criadas pela
 * **[Boriel ZX Basic Compiler](https://zxbasic.readthedocs.io/) (Jose Rodriguez-Rosa):** Compilador moderno de BASIC estruturado para Z80.
 * **[FTXUI](https://github.com/ArthurSonzogni/FTXUI) (Arthur Sonzogni):** Biblioteca moderna de C++ para construção de interfaces no terminal (TUI).
 * **[Dear ImGui](https://github.com/ocornut/imgui) (Omar Cornut):** Biblioteca gráfica *immediate-mode* ultrarrápida para a interface gráfica (GUI).
+* **[SQLite 3](https://www.sqlite.org/) (D. Richard Hipp):** Motor de banco de dados relacional embarcado em C (Amalgamation) utilizado para o banco de configurações (`zx81ide.db`) e formato oficial de projetos portáteis (`.zx81project`).
 
 ---
 

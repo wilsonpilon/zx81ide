@@ -85,6 +85,23 @@
   8. Correção das bordas UTF-8 no TUI: resolvido o bug em `ScreenBuffer::put_string` que iterava byte a byte ao invés de codepoint UTF-8, dividindo caracteres de moldura (`┌`, `─`, etc.) em fragmentos inválidos que causavam losangos com interrogação em Nerd Fonts (JetBrains Mono). Implementado decodificador UTF-8 nativo, `repeat_utf8` e `SetConsoleCP(CP_UTF8)`. Versão incrementada para `v0.1.3` (`Correcao no parse UTF-8 das bordas no TUI`).
   9. Alinhamento e ampliação dos menus suspensos: ampliada a largura das caixas dropdown para 22 colunas e implementado o formatador `format_menu_item`, garantindo que os rótulos e atalhos fiquem contidos exatamente na área útil interna (`inner_w = 20`) sem encostar ou sobrepor a borda vertical direita (`│`). Versão incrementada para `v0.1.4` (`Alinhamento e ampliacao da borda dos menus TUI`).
 
+### Sessão 06 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Usar o SQLite como banco de dados para os parâmetros e configurações dos programas (`zx81ide.db`).
+  * Criar um sistema de projetos (`.zx81project`), onde cada arquivo é um banco SQLite autocontido reunindo configurações do projeto, códigos-fonte de usuários em BASIC e ASM, telas, compilados binários, manuais, etc.
+  * Criar imediatamente uma configuração inicial que solicita o tema a ser usado no `zx81ide` (`normal`, `invertido`, `claro`, `escuro`), preparando o terreno para os parâmetros visuais de cada tema.
+* **Ações Executadas:**
+  1. Integração da biblioteca oficial SQLite 3 Amalgamation em `third_party/sqlite3/` (`sqlite3.c`, `sqlite3.h`), com compilação estática transparente e sem dependências de DLLs.
+  2. Implementação da camada C++ RAII em `include/core/db.h` e `src/core/db.cpp` (`Database`, `Statement`) com suporte a binds, transações ACID e consultas seguras.
+  3. Implementação do `ConfigManager` em `include/core/config_manager.h` e `src/core/config_manager.cpp`, persistindo preferências na tabela `settings` do SQLite (`zx81ide.db`).
+  4. Implementação do diálogo interativo na inicialização que detecta ausência de tema e solicita a escolha (`[1] normal`, `[2] invertido`, `[3] claro`, `[4] escuro`).
+  5. Implementação do sistema de projetos em `include/core/project.h` e `src/core/project.cpp`, inicializando schemas para metadados, fontes (`sources`), telas (`screens`), binários (`binaries`), manuais (`manuals`) e recursos (`assets`), além de semear `main.bas` e `MANUAL.md` na criação de novos projetos.
+  6. Adição de comandos CLI completos para temas, configurações e projetos (`theme`, `config [list|get|set]`, `project [new|info|list|add-source|view-source|export-source|add-doc|view-doc]`).
+  7. Atualização do modo TUI para exibir dinamicamente o tema na barra de status e no diálogo Sobre.
+  8. Atualização de `build.ps1`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `README.md` e `MANUAL.md`.
+  9. Compilação bem-sucedida, testes funcionais de CLI/SQLite e geração do pacote `zx81ide-v-0.1.5.zip`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

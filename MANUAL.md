@@ -149,22 +149,46 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
   * `F10`: Alterna o foco da barra de menus.
   * `Alt+X` ou `Q`: Encerra o TUI e retorna ao console.
 
+### 5.4. Gestão de Configurações e Temas (SQLite)
+O **zx81ide** utiliza o **SQLite 3** como motor para armazenamento de parâmetros e preferências da aplicação no arquivo `zx81ide.db`:
+* **Primeira Execução:** Se nenhum tema estiver configurado, o sistema abre um diálogo interativo solicitando a seleção:
+  * `[1] normal`: Sinclair ZX-81 padrão (texto branco/cinza em fundo preto).
+  * `[2] invertido`: Sinclair invertido (texto preto em fundo branco).
+  * `[3] claro`: Tema claro.
+  * `[4] escuro`: Tema escuro.
+* **Comandos de Tema no Console CLI:**
+  * `theme`: Exibe o tema atualmente ativo e a lista de temas suportados.
+  * `theme <normal|invertido|claro|escuro>`: Altera instantaneamente o tema no banco SQLite.
+* **Comandos de Configuração:**
+  * `config` ou `config list`: Lista todas as configurações gravadas no banco `zx81ide.db`.
+  * `config get <chave>`: Lê o valor de uma configuração.
+  * `config set <chave> <valor>`: Salva ou atualiza uma configuração.
+
 ---
 
-## 6. Estrutura de Projetos no zx81ide
+## 6. Sistema de Projetos Portáteis (`.zx81project`)
 
-Um projeto padrão no **zx81ide** conterá a seguinte organização de arquivos:
+No **zx81ide**, os projetos são encapsulados em arquivos com extensão `.zx81project`. Cada arquivo `.zx81project` é um **banco de dados SQLite 3** autocontido e portátil, garantindo integridade ACID e facilitando o compartilhamento e backup do projeto em um único arquivo:
 
+### 6.1. Estrutura Interna de um `.zx81project`
+* `project_meta`: Tabela contendo metadados (nome, versão, autor, descrição, modelo ZX-81 alvo e fonte inicial).
+* `project_settings`: Tabela chave-valor para parâmetros de compilação e preferências do projeto.
+* `sources`: Fontes de código BASIC Sinclair, Dignified BASIC e Assembly Z80 (`main.bas`, `engine.asm`).
+* `screens`: Telas gravadas nos formatos Standard 32x24 DFILE, ASCII, blocos e HRG.
+* `binaries`: Imagens compiladas prontas (`.p`, `.bin`, `.hex`), com controle de tamanho e timestamp de build.
+* `manuals`: Documentação do projeto, instruções de jogo e manuais em formato Markdown (`MANUAL.md`).
+* `assets`: Mapas, dados binários de som e recursos gráficos.
+
+### 6.2. Comandos CLI para Manipulação de Projetos
 ```text
-meu_projeto/
-├── project.zx81        # Arquivo de configuracao do projeto (JSON ou TOML)
-├── src/
-│   ├── main.bas        # Codigo BASIC principal
-│   └── routine.asm     # Rotinas auxiliares em Assembly Z80
-├── assets/
-│   └── tiles.scr       # Telas e blocos graficos gerados no editor de tela
-└── bin/
-    └── output.p        # Snapshot final pronto para carregar no hardware real ou emulador
+zx81ide> project new <meu_jogo.zx81project> [nome] [autor]
+zx81ide> project info <meu_jogo.zx81project>
+zx81ide> project list <meu_jogo.zx81project>
+zx81ide> project add-source <meu_jogo.zx81project> <arquivo.bas> [BASIC]
+zx81ide> project view-source <meu_jogo.zx81project> <nome_fonte>
+zx81ide> project export-source <meu_jogo.zx81project> <nome_fonte> <arquivo_saida>
+zx81ide> project add-doc <meu_jogo.zx81project> <manual.md>
+zx81ide> project view-doc <meu_jogo.zx81project> <titulo>
 ```
 
 ---

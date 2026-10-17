@@ -1,18 +1,35 @@
 cmake_minimum_required(VERSION 3.15)
-project(zx81ide VERSION 0.1.4 LANGUAGES C CXX)
+project(zx81ide VERSION 0.1.5 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# SQLite library target (amalgamation)
+add_library(sqlite3 STATIC
+    third_party/sqlite3/sqlite3.c
+)
+target_include_directories(sqlite3 PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sqlite3
+)
+if(MSVC)
+    target_compile_options(sqlite3 PRIVATE /w)
+else()
+    target_compile_options(sqlite3 PRIVATE -w)
+endif()
+
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sqlite3
 )
 
 # Source files
 set(SOURCES
     src/main.cpp
+    src/core/db.cpp
+    src/core/config_manager.cpp
+    src/core/project.cpp
     src/cli/cli_parser.cpp
     src/cli/cli_app.cpp
     src/ui_tui/tui_app.cpp
@@ -24,7 +41,11 @@ add_executable(zx81ide ${SOURCES})
 # Target include directories
 target_include_directories(zx81ide PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sqlite3
 )
+
+# Link SQLite
+target_link_libraries(zx81ide PRIVATE sqlite3)
 
 # Compiler options
 if(MSVC)

@@ -70,3 +70,11 @@ Testing/
 # Release distribution and archives
 dist/
 *.zip
+
+# Local SQLite databases and projects
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.zx81project
+

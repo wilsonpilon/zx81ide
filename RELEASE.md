@@ -4,6 +4,44 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.5] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.5 [3D Monster Maze] - Integracao SQLite, Banco de Configuracoes, Temas e Sistema de Projetos .zx81project`
+
+* **Versão:** `0.1.5`
+* **Tag Git:** `v0.1.5`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Integracao SQLite, Banco de Configuracoes, Temas e Sistema de Projetos .zx81project`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.5.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.5** introduz o motor de persistência relacional baseado em **SQLite 3**, viabilizando dois pilares fundamentais da arquitetura do `zx81ide`:
+1. **Banco de Dados de Configurações Global (`zx81ide.db`):** Armazenamento estruturado de preferências e parâmetros da IDE, com assistente de inicialização interativo para escolha imediata do tema (`normal`, `invertido`, `claro`, `escuro`).
+2. **Sistema de Projetos Portáteis (`.zx81project`):** Arquivos de projeto que são bancos de dados SQLite autocontidos, unificando códigos-fonte de usuários em BASIC e ASM, telas (DFILE/ASCII), binários compilados (.p), documentação em Markdown e assets.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **SQLite 3 Amalgamation Integrado:** Inclusão direta de `third_party/sqlite3/sqlite3.c` e `sqlite3.h`, com compilação estática transparente e zero dependência de DLLs externas.
+* **Abstração C++ RAII para SQLite:** Classes `Database` e `Statement` em `include/core/db.h` e `src/core/db.cpp`, provendo binds seguros, transações ACID e consultas seguras contra corrupção.
+* **Gerenciador de Configurações (`ConfigManager`):** Manipulação de chaves/valores via SQLite com novos comandos CLI: `config [list|get|set]`, `theme [nome]` e `--theme <nome>`.
+* **Configuração Inicial de Tema:** Ao iniciar sem configurações salvas, o sistema solicita a seleção do tema desejado (`[1] normal`, `[2] invertido`, `[3] claro`, `[4] escuro`), gravando a preferência no banco SQLite.
+* **Manipulador de Projetos (`Project`):** Suporte nativo a `.zx81project` com comandos no console CLI:
+  * `project new <proj.zx81project> [nome] [autor]`
+  * `project info <proj.zx81project>`
+  * `project list <proj.zx81project>`
+  * `project add-source <proj.zx81project> <arquivo_externo> [BASIC|ASM]`
+  * `project view-source <proj.zx81project> <nome_fonte>`
+  * `project export-source <proj.zx81project> <nome_fonte> <arquivo_saida>`
+  * `project add-doc <proj.zx81project> <arquivo_externo>`
+  * `project view-doc <proj.zx81project> <titulo>`
+* **Visualização na TUI:** A barra de status e o diálogo About passam a indicar dinamicamente o tema ativo configurado no SQLite.
+* **Pacote de Distribuição:** Binário compilado e empacotado em `zx81ide-v-0.1.5.zip`.
+
+---
+
 ## [v0.1.4] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.4 [3D Monster Maze] - Alinhamento e ampliacao da borda dos menus TUI`
 

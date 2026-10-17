@@ -9,6 +9,26 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.5] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Integracao SQLite, Banco de Configuracoes, Temas e Sistema de Projetos .zx81project"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Integração Nativa do SQLite 3:** Incorporada a biblioteca oficial SQLite 3 Amalgamation em `third_party/sqlite3/`, compilada estaticamente com o projeto sem dependências externas de DLLs.
+* **Camada RAII C++ para SQLite (`core/db.h`, `core/db.cpp`):** Classes `Database` e `Statement` fornecendo gerenciamento automático de memória, suporte a transações ACID, execução de queries escalares, binds seguros (texto, inteiros, blobs) e tratamento robusto de erros.
+* **Gerenciador de Configurações SQLite (`core/config_manager.h`, `core/config_manager.cpp`):** Armazenamento de parâmetros globais do ambiente em banco SQLite (`zx81ide.db`), com tabela `settings` e versionamento temporal.
+* **Seleção e Gestão de Temas:**
+  * Diálogo interativo na inicialização caso nenhum tema esteja gravado no banco de configurações.
+  * Suporte aos 4 temas solicitados: `normal` (Sinclair padrão), `invertido` (texto preto em fundo branco), `claro` e `escuro`.
+  * Novos comandos de linha de comando: `theme` (inspeciona) e `theme <nome>` (altera), além de parâmetro `--theme <nome>` na inicialização.
+* **Sistema de Projetos Portáteis `.zx81project` (`core/project.h`, `core/project.cpp`):**
+  * Cada arquivo de projeto `.zx81project` é um banco SQLite estruturado contendo metadados (`project_meta`), configurações (`project_settings`), fontes de código BASIC e ASM (`sources`), telas DFILE/ASCII (`screens`), binários compilados (`binaries`), manuais e documentações em Markdown (`manuals`) e recursos gráficos (`assets`).
+  * Comandos CLI de manipulação de projetos: `project new`, `project info`, `project list`, `project add-source`, `project view-source`, `project export-source`, `project add-doc`, `project view-doc`.
+* **Integração Visual na TUI:** Indicador dinâmico do tema ativo na barra de status inferior (`| Tema: <nome> | v0.1.5`) e identificação no diálogo About.
+
+---
+
 ## [0.1.4] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Alinhamento e ampliacao da borda dos menus TUI"

@@ -1,5 +1,6 @@
 #include "ui_tui/tui_app.h"
 #include "core/version.h"
+#include "core/config_manager.h"
 
 #include <iostream>
 #include <string>
@@ -252,7 +253,8 @@ int run_tui() {
         std::string shortcuts = " F10:Menu | Setas:Navegar | Enter:Selecionar | Esc:Fechar/Sair ";
         screen.put_string(1, status_y, shortcuts, Colors::FG_BLACK, Colors::BG_GRAY_LIGHT);
 
-        std::string version_tag = "| v" + get_version_string();
+        std::string current_theme = core::ConfigManager::instance().get_theme();
+        std::string version_tag = "| Tema: " + current_theme + " | v" + get_version_string();
         int version_x = width - static_cast<int>(version_tag.size()) - 1;
         if (version_x > static_cast<int>(shortcuts.size())) {
             screen.put_string(version_x, status_y, version_tag, Colors::FG_BLACK, Colors::BG_GRAY_LIGHT);
@@ -311,7 +313,7 @@ int run_tui() {
         // -------------------------------------------------------------
         if (show_about) {
             int dlg_w = 54;
-            int dlg_h = 16;
+            int dlg_h = 17;
             int dlg_x = (width - dlg_w) / 2;
             int dlg_y = (height - dlg_h) / 2;
 
@@ -341,12 +343,13 @@ int run_tui() {
             screen.put_string(dlg_x + 3, dlg_y + 6,  "Hardware (X): " + VERSION_MAJOR_NAME, Colors::FG_GRAY_LIGHT, Colors::BG_BLACK);
             screen.put_string(dlg_x + 3, dlg_y + 7,  "Jogo     (Y): " + VERSION_GAME_CODENAME, Colors::FG_GRAY_LIGHT, Colors::BG_BLACK);
             screen.put_string(dlg_x + 3, dlg_y + 8,  "Build    (Z): " + VERSION_BUILD_SUBTITLE, Colors::FG_GRAY_DARK, Colors::BG_BLACK);
-            screen.put_string(dlg_x + 3, dlg_y + 10, "Autor       : Wilson \"Barney\" Pilon", Colors::FG_WHITE, Colors::BG_BLACK);
-            screen.put_string(dlg_x + 3, dlg_y + 11, "Inspiracao  : fwMSX (github.com/wilsonpilon/fwMSX)", Colors::FG_GRAY_DARK, Colors::BG_BLACK);
+            screen.put_string(dlg_x + 3, dlg_y + 9,  "Tema Ativo  : " + current_theme + " (SQLite 3)", Colors::FG_WHITE, Colors::BG_BLACK);
+            screen.put_string(dlg_x + 3, dlg_y + 11, "Autor       : Wilson \"Barney\" Pilon", Colors::FG_WHITE, Colors::BG_BLACK);
+            screen.put_string(dlg_x + 3, dlg_y + 12, "Inspiracao  : fwMSX (github.com/wilsonpilon/fwMSX)", Colors::FG_GRAY_DARK, Colors::BG_BLACK);
 
             // Botão [ OK ]
             std::string ok_btn = " [  OK  ] ";
-            screen.put_string(dlg_x + (dlg_w - static_cast<int>(ok_btn.size())) / 2, dlg_y + 13, ok_btn, Colors::FG_BLACK, Colors::BG_WHITE);
+            screen.put_string(dlg_x + (dlg_w - static_cast<int>(ok_btn.size())) / 2, dlg_y + 14, ok_btn, Colors::FG_BLACK, Colors::BG_WHITE);
 
             // Sombra do diálogo
             for (int dy = 1; dy <= dlg_h; ++dy) {

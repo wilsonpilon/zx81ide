@@ -12,12 +12,16 @@ enum class AppMode {
     CLI_HELP,
     CLI_VERSION,
     TUI,
-    GUI
+    GUI,
+    PROJECT_INFO
 };
 
 struct CliOptions {
     AppMode mode = AppMode::CLI_INTERACTIVE;
     std::string source_file;
+    std::string project_file;
+    std::string theme_override;
+    std::string config_db_path;
     bool has_error = false;
     std::string error_message;
 };

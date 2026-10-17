@@ -181,10 +181,14 @@ if ($HasCMake) {
     }
 } else {
     Write-Host "CMake nao disponivel. Compilando diretamente com g++..." -ForegroundColor Gray
-    $SourceFiles = Get-ChildItem -Path (Join-Path $RootDir "src") -Filter "*.cpp" -Recurse | Select-Object -ExpandProperty FullName
+    $SourceFiles = @(
+        (Get-ChildItem -Path (Join-Path $RootDir "src") -Filter "*.cpp" -Recurse | Select-Object -ExpandProperty FullName),
+        (Join-Path $RootDir "third_party/sqlite3/sqlite3.c")
+    )
     $IncludeDir = (Join-Path $RootDir "include")
+    $SqliteInclude = (Join-Path $RootDir "third_party/sqlite3")
     
-    & g++ -std=c++17 -O2 -Wall -Wextra -I$IncludeDir $SourceFiles -o $TargetExe
+    & g++ -std=c++17 -O2 -Wall -Wextra -I$IncludeDir -I$SqliteInclude $SourceFiles -o $TargetExe
     if ($LASTEXITCODE -ne 0) { throw "Falha na compilacao com g++!" }
 }
 
