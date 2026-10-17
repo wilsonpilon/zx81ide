@@ -140,11 +140,12 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
   * `Arquivo` -> `Sair (Alt+X)`
   * `Help` -> `About... (F1)`
 * **Desktop:** Área central com padrão quadriculado ASCII em cinza e branco (`░░▒▒`).
-* **Barra de Status (Última Linha):** Fundo cinza com letras pretas, atalhos úteis e versão alinhada à direita (`| v0.1.1`).
+* **Barra de Status (Última Linha):** Fundo e letras combinados com o tema, atalhos de navegação e identificador dinâmico de tema e versão (`| Tema: invertido | v0.1.6`).
 * **Atalhos do Teclado:**
   * `Setas Esquerda / Direita`: Alterna entre os menus `Arquivo` e `Help`.
   * `Seta Abaixo / Enter`: Abre o submenu suspenso ou ativa o item selecionado.
   * `Esc`: Fecha submenus ou caixas de diálogo; sai do modo TUI quando no nível raiz.
+  * `T` ou `F2`: Alterna dinamicamente entre os temas disponíveis (`normal` -> `invertido` -> `claro` -> `escuro`), salvando no SQLite imediatamente.
   * `F1`: Abre imediatamente o diálogo modal Sobre (About).
   * `F10`: Alterna o foco da barra de menus.
   * `Alt+X` ou `Q`: Encerra o TUI e retorna ao console.
@@ -152,8 +153,8 @@ O comando `tui` (ou a flag `--tui`) aciona a interface inspirada nos softwares c
 ### 5.4. Gestão de Configurações e Temas (SQLite)
 O **zx81ide** utiliza o **SQLite 3** como motor para armazenamento de parâmetros e preferências da aplicação no arquivo `zx81ide.db`:
 * **Primeira Execução:** Se nenhum tema estiver configurado, o sistema abre um diálogo interativo solicitando a seleção:
-  * `[1] normal`: Sinclair ZX-81 padrão (texto branco/cinza em fundo preto).
-  * `[2] invertido`: Sinclair invertido (texto preto em fundo branco).
+  * `[1] normal`: Sinclair ZX-81 padrão (texto branco/cinza em fundo preto, status cinza com texto preto).
+  * `[2] invertido`: Sinclair invertido (menus com fundo cinza e letras pretas; destaques/seleção com fundo preto e letras brancas; desktop com cores invertidas do normal; barra de status com fundo preto e letras brancas).
   * `[3] claro`: Tema claro.
   * `[4] escuro`: Tema escuro.
 * **Comandos de Tema no Console CLI:**

@@ -102,6 +102,22 @@
   8. Atualização de `build.ps1`, `CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `README.md` e `MANUAL.md`.
   9. Compilação bem-sucedida, testes funcionais de CLI/SQLite e geração do pacote `zx81ide-v-0.1.5.zip`.
 
+### Sessão 07 - 16/10/2026
+* **Ambiente:** Windows 11, Antigravity IDE (DeepMind), Modelo: Google Gemini.
+* **Solicitação do Usuário:**
+  * Implementação visual das especificações do tema invertido:
+    * Menus com fundo cinza e letras pretas.
+    * Destaques e seleção com fundo preto e letras brancas.
+    * Desktop invertendo as cores do normal (`FG_BLACK` em `BG_GRAY_DARK`), mantendo a textura harmônica.
+    * Barra de status com fundo preto e letras brancas.
+* **Ações Executadas:**
+  1. Criação da estrutura de dados `TuiTheme` e da rotina `get_tui_theme(name)` em `src/ui_tui/tui_app.cpp` desacoplando as cores do motor de renderização.
+  2. Implementação das regras do tema invertido em todos os elementos da TUI (barra de menus, caixas suspensas, destaques de seleção, desktop, barra de status e diálogo Sobre).
+  3. Adição das teclas de atalho `T` e `F2` na interface TUI para alternância dinâmica de temas com persistência automática no SQLite (`zx81ide.db`).
+  4. Incremento para versão `v0.1.6` (`Implementacao visual do tema invertido no modo TUI`).
+  5. Atualização dos documentos vivos (`CMakeLists.txt`, `CHANGELOG.md`, `RELEASE.md`, `README.md`, `MANUAL.md` e `OUTLINE.md`).
+  6. Compilação, testes funcionais e geração do pacote de distribuição `zx81ide-v-0.1.6.zip`.
+
 ---
 
 ## 4. Guia Rápido para Próxima IA ou Novo PC

@@ -9,6 +9,23 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ---
 
+## [0.1.6] - 2026-10-16
+### Codename: "3D Monster Maze"
+### Subtítulo: "Implementacao visual do tema invertido no modo TUI"
+### Linhagem de Hardware (X): Sinclair ZX81 (Foundation)
+
+### Adicionado (Added)
+* **Motor Dinâmico de Temas no TUI (`TuiTheme`):** Desacoplamento de cores estáticas e introdução da rotina `get_tui_theme(name)` mapeando as paletas dos temas.
+* **Implementação Visual do Tema Invertido:**
+  * **Barra de Menus e Dropdowns:** Fundo cinza claro (`BG_GRAY_LIGHT`) com letras pretas (`FG_BLACK`).
+  * **Destaques e Seleção:** Menus ativos e itens selecionados em submenus com fundo preto (`BG_BLACK`) e letras brancas (`FG_WHITE`).
+  * **Desktop com Inversão do Padrão:** Caracteres quadriculados ASCII (`░`) em preto (`FG_BLACK`) sobre fundo cinza escuro (`BG_GRAY_DARK`), invertendo o contraste do tema normal e mantendo a textura harmônica.
+  * **Barra de Status:** Fundo preto (`BG_BLACK`) com letras brancas (`FG_WHITE`).
+  * **Diálogo Modal Sobre (About):** Moldura e textos em preto sobre corpo cinza, com botão `[ OK ]` em fundo preto com letras brancas.
+* **Alternância em Tempo Real:** Teclas de atalho `T` ou `F2` na interface TUI para alternar dinamicamente os temas com gravação automática imediata no banco SQLite (`zx81ide.db`).
+
+---
+
 ## [0.1.5] - 2026-10-16
 ### Codename: "3D Monster Maze"
 ### Subtítulo: "Integracao SQLite, Banco de Configuracoes, Temas e Sistema de Projetos .zx81project"

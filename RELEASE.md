@@ -4,6 +4,35 @@ Arquivo oficial de registro e detalhamento de lançamentos do **zx81ide**.
 
 ---
 
+## [v0.1.6] - 2026-10-16
+### Título do Lançamento: `zx81ide v0.1.6 [3D Monster Maze] - Implementacao visual do tema invertido no modo TUI`
+
+* **Versão:** `0.1.6`
+* **Tag Git:** `v0.1.6`
+* **Marco de Hardware (X):** `Sinclair ZX81 (Foundation)`
+* **Jogo Clássico Homenageado (Y):** `3D Monster Maze` *(Malcolm Evans, 1981)*
+* **Subtítulo da Compilação (Z):** `Implementacao visual do tema invertido no modo TUI`
+* **Arquivo de Distribuição:** `zx81ide-v-0.1.6.zip`
+
+---
+
+### 1. Resumo do Lançamento
+A versão **v0.1.6** entrega a implementação visual completa do **Tema Invertido** no modo TUI do `zx81ide`, com inversão proporcional de contraste e paleta estrita Sinclair ZX-81 (preto, branco e cinza), permitindo alternância instantânea tanto via CLI quanto por tecla de atalho em tempo real no console gráfico.
+
+---
+
+### 2. O Que Foi Entregue Nesta Versão
+* **Paleta Invertida Fiel às Especificações:**
+  * **Barra de Menus e Caixas de Dropdown:** Fundo cinza claro (`BG_GRAY_LIGHT`) com textos e bordas em preto (`FG_BLACK`).
+  * **Destaques e Seleção:** Itens ativos em menus e dropdowns com fundo preto (`BG_BLACK`) e letras em branco puro (`FG_WHITE`).
+  * **Desktop Invertido:** Caracteres quadriculados ASCII (`░`) em preto (`FG_BLACK`) sobre fundo cinza escuro uniforme (`BG_GRAY_DARK`), invertendo a polaridade do tema normal com harmonia visual.
+  * **Barra de Status:** Fundo preto invertido (`BG_BLACK`) com caracteres brancos (`FG_WHITE`).
+  * **Diálogo Modal Sobre (About):** Janela com corpo cinza claro, moldura dupla em preto e botão `[ OK ]` com destaque preto e letras brancas.
+* **Alternância Interativa de Temas:** Pressionar `T` ou `F2` na interface TUI alterna os temas em tempo de execução e salva a escolha imediatamente no banco SQLite (`zx81ide.db`).
+* **Pacote de Distribuição:** Binário compilado e pacote compactado `zx81ide-v-0.1.6.zip`.
+
+---
+
 ## [v0.1.5] - 2026-10-16
 ### Título do Lançamento: `zx81ide v0.1.5 [3D Monster Maze] - Integracao SQLite, Banco de Configuracoes, Temas e Sistema de Projetos .zx81project`
 
